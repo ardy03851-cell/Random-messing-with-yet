@@ -391,9 +391,17 @@
       </div>
 
       <div class="form-group" id="customUrlGroup" style="display: none;">
-        <label for="customUrlInput">Endpoint Base URL</label>
-        <input type="text" id="customUrlInput" placeholder="https://api.openai.com/v1" onchange="saveSettings()">
-      </div>
+                <label for="customUrlInput">Endpoint Base URL</label>
+                <input type="text" id="customUrlInput" placeholder="https://api.openai.com/v1" onchange="saveSettings()">
+      </div>
+
+
+
+
+            <div class="form-group" id="customModelGroup" style="display: none;">
+                <label for="customModelInput">Custom Model Name / ID</label>
+                <input type="text" id="customModelInput" placeholder="e.g. gpt-4o, llama3:latest" onchange="saveSettings()">
+      </div>
 
       <div class="form-group">
         <label for="goalSelect">Learning Objective</label>
@@ -757,6 +765,7 @@
             const provider = document.getElementById('providerSelect').value;
             const modelSelect = document.getElementById('modelSelect');
             const customGroup = document.getElementById('customUrlGroup');
+            const customModelGroup = document.getElementById('customModelGroup');
 
             modelSelect.innerHTML = '';
             const models = MODEL_OPTIONS[provider] || [];
@@ -768,7 +777,9 @@
                 modelSelect.appendChild(opt);
             });
 
-            customGroup.style.display = (provider === 'custom') ? 'flex' : 'none';
+            const isCustom = (provider === 'custom');
+            customGroup.style.display = isCustom ? 'flex' : 'none';
+            if (customModelGroup) customModelGroup.style.display = isCustom ? 'flex' : 'none';
             saveSettings();
         }
 
@@ -777,7 +788,8 @@
                 provider: document.getElementById('providerSelect').value,
                 key: document.getElementById('apiKeyInput').value,
                 model: document.getElementById('modelSelect').value,
-                customUrl: document.getElementById('customUrlInput').value
+                customUrl: document.getElementById('customUrlInput').value,
+                customModel: document.getElementById('customModelInput') ? document.getElementById('customModelInput').value : ''
             };
             localStorage.setItem('square_dude_ai_settings', JSON.stringify(settings));
         }
@@ -792,6 +804,7 @@
                     if (data.key) document.getElementById('apiKeyInput').value = data.key;
                     if (data.model) document.getElementById('modelSelect').value = data.model;
                     if (data.customUrl) document.getElementById('customUrlInput').value = data.customUrl;
+                    if (data.customModel && document.getElementById('customModelInput')) document.getElementById('customModelInput').value = data.customModel;
                 } catch(e) {}
             } else {
                 onProviderChange();
@@ -879,10 +892,12 @@ Keep joint angles in radians (-1.2 to 1.2). stepDistance (0.0 to 0.5m) moves cha
                 };
             } else if (provider === "custom") {
                 const baseUrl = document.getElementById('customUrlInput').value.trim() || "https://api.openai.com/v1";
+                const customModelInput = document.getElementById('customModelInput');
+                const customModelName = (customModelInput && customModelInput.value.trim()) ? customModelInput.value.trim() : (model || "gpt-3.5-turbo");
                 url = `${baseUrl}/chat/completions`;
                 if (key) headers["Authorization"] = `Bearer ${key}`;
                 body = {
-                    model: model || "gpt-3.5-turbo",
+                    model: customModelName,
                     messages: [{ role: "user", content: prompt }]
                 };
             }
