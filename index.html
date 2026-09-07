@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>3D Square Dude AI Learner</title>
+
+  <!-- CDNs -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0f172a;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .glass {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Custom scrollbar for reasoning panel */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body class="text-slate-100 flex flex-col h-screen overflow-hidden">
+
+  <!-- Canvas Container -->
+  <div id="canvas-container" class="relative w-full h-full">
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Top HUD Bar -->
+    <div class="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-none z-10">
+      <div class="glass px-4 py-2 rounded-2xl flex items-center space-x-3 pointer-events-auto shadow-lg">
+        <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" id="status-indicator"></div>
+        <div>
+          <h1 class="text-sm font-bold tracking-wide">SQUARE DUDE AI</h1>
+          <p class="text-xs text-slate-400" id="status-text">Ready to train</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2 pointer-events-auto">
+        <button id="btn-settings" class="glass p-3 rounded-2xl hover:bg-slate-800/80 active:scale-95 transition flex items-center justify-center shadow-lg">
+                    <i data-lucide="settings" class="w-5 h-5 text-slate-200"></i>
+                </button>
+      </div>
+    </div>
+
+    <!-- Telemetry HUD Overlay -->
+    <div class="absolute top-20 left-4 glass p-4 rounded-2xl w-64 pointer-events-auto shadow-xl hidden md:block">
+      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+        <i data-lucide="activity" class="w-3.5 h-3.5 text-indigo-400"></i> Telemetry
+      </h2>
+      <div class="space-y-2 text-xs">
+        <div class="flex justify-between">
+          <span class="text-slate-400">Distance to Target:</span>
+          <span id="tel-distance" class="font-mono text-emerald-400 font-bold">0.0m</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Current Reward:</span>
+          <span id="tel-reward" class="font-mono text-indigo-400 font-bold">0.00</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Total Steps:</span>
+          <span id="tel-steps" class="font-mono text-slate-200">0</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Pose State:</span>
+          <span id="tel-pose" class="font-mono text-amber-400">Upright</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Reasoning & Learning Logs Floating Panel -->
+    <div id="ai-log-panel"
+      class="absolute bottom-24 left-4 right-4 md:right-auto md:w-96 glass p-4 rounded-2xl pointer-events-auto max-h-48 flex flex-col shadow-xl">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-xs font-semibold text-indigo-400 flex items-center gap-1.5">
+                    <i data-lucide="brain" class="w-4 h-4"></i> AI Learned Policy & Thought Stream
+                </span>
+        <span class="text-[10px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full" id="active-model-tag">Gemini Flash</span>
+      </div>
+      <div id="ai-thought-log" class="text-xs text-slate-300 overflow-y-auto space-y-1 font-mono pr-1 flex-1">
+        <p class="text-slate-500 italic">Configure your API key and press "Start AI Learning Loop" to begin physical
+          training...</p>
+      </div>
+    </div>
+
+    <!-- Bottom Touch-Optimized Control Dock -->
+    <div class="absolute bottom-4 left-4 right-4 flex justify-center items-center pointer-events-none z-10">
+      <div
+        class="glass p-2 rounded-2xl flex items-center space-x-2 pointer-events-auto shadow-2xl border border-slate-700/50">
+        <button id="btn-toggle-train" class="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition active:scale-95 shadow-md">
+                    <i data-lucide="play" class="w-4 h-4" id="play-icon"></i>
+                    <span id="train-btn-label">Start Learning</span>
+                </button>
+        <button id="btn-reset-dude" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-xl transition active:scale-95 flex items-center justify-center" title="Reset Character Pose">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+        <button id="btn-move-target" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-xl transition active:scale-95 flex items-center justify-center" title="Tap Ground to Move Target">
+                    <i data-lucide="crosshair" class="w-4 h-4 text-emerald-400"></i>
+                </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal"
+    class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass p-6 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-700 space-y-5">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <i data-lucide="cpu" class="w-5 h-5 text-indigo-400"></i> AI Provider Settings
+        </h3>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-white p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs text-slate-400 font-semibold mb-1">Provider Preset / Base URL</label>
+          <select id="api-provider-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        <option value="https://openrouter.ai/api/v1">OpenRouter (Recommended)</option>
+                        <option value="https://api.openai.com/v1">OpenAI Official</option>
+                        <option value="custom">Custom OpenAI-Compatible Endpoint</option>
+                    </select>
+        </div>
+
+        <div id="custom-url-container" class="hidden">
+          <label class="block text-xs text-slate-400 font-semibold mb-1">Custom API Base URL</label>
+          <input type="text" id="api-base-url" placeholder="https://api.yourprovider.com/v1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 font-semibold mb-1">API Key</label>
+          <input type="password" id="api-key" placeholder="sk-or-v1-..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 font-mono">
+          <p class="text-[10px] text-slate-500 mt-1">Keys are saved locally in your iPad browser localStorage.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 font-semibold mb-1">Model Name</label>
+          <div class="flex gap-2 mb-2">
+            <select id="model-preset-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                            <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (Free - Fast)</option>
+                            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
+                            <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free Reasoning)</option>
+                            <option value="qwen/qwen-2.5-72b-instruct:free">Qwen 2.5 72B (Free)</option>
+                            <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                            <option value="custom">Custom Model ID...</option>
+                        </select>
+          </div>
+          <input type="text" id="model-custom-input" placeholder="e.g. anthropic/claude-3.5-sonnet" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 hidden font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 font-semibold mb-1">AI Goal Objective</label>
+          <input type="text" id="ai-prompt-goal" value="Walk forward towards the golden orb target while keeping balance" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button id="btn-save-settings" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition active:scale-95 shadow-lg text-sm">
+                    Save Configuration
+                </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Application Code -->
+  <script>
+    // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Application State
+        const state = {
+            apiKey: localStorage.getItem('sqd_api_key') || '',
+            apiBaseUrl: localStorage.getItem('sqd_api_base_url') || 'https://openrouter.ai/api/v1',
+            model: localStorage.getItem('sqd_model') || 'google/gemini-2.0-flash-exp:free',
+            goal: localStorage.getItem('sqd_goal') || 'Walk forward towards the golden orb target while maintaining upright balance',
+            isTraining: false,
+            stepCount: 0,
+            bestReward: -Infinity,
+            lastReward: 0,
+            memoryBuffer: [], // Stores top reward motor actions
+            isMovingTarget: false
+        };
+
+        // Initialize UI Elements
+        document.getElementById('api-key').value = state.apiKey;
+        document.getElementById('api-base-url').value = state.apiBaseUrl;
+        document.getElementById('active-model-tag').innerText = state.model.split('/')[1] || state.model;
+
+        // --- 3D & Physics Engine Setup ---
+        let scene, camera, renderer, controls;
+        let world;
+        let dudeParts = []; // Visual Three meshes & Cannon physics bodies
+        let jointConstraints = {};
+        let targetMesh, targetBody;
+        let raycaster = new THREE.Raycaster();
+        let touchVector = new THREE.Vector2();
+
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+            const canvas = document.getElementById('webgl-canvas');
+
+            // Three Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+            scene.fog = new THREE.FogExp2(0x0f172a, 0.03);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 3.5, 6.5);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Touch-friendly Orbit Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 - 0.02; // Don't clip through ground
+            controls.target.set(0, 1, 0);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 7);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 1024;
+            dirLight.shadow.mapSize.height = 1024;
+            dirLight.shadow.camera.near = 0.5;
+            dirLight.shadow.camera.far = 25;
+            scene.add(dirLight);
+
+            // Ground Plane Grid
+            const gridHelper = new THREE.GridHelper(30, 30, 0x6366f1, 0x334155);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+
+            // Physics World
+            world = new CANNON.World();
+            world.gravity.set(0, -9.82, 0);
+            world.broadphase = new CANNON.NaiveBroadphase();
+            world.solver.iterations = 10;
+
+            // Ground Physics Body
+            const groundShape = new CANNON.Plane();
+            const groundBody = new CANNON.Body({ mass: 0 });
+            groundBody.addShape(groundShape);
+            groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+            world.addBody(groundBody);
+
+            // Visual Ground
+            const groundGeo = new THREE.PlaneGeometry(30, 30);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
+            const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+            groundMesh.rotation.x = -Math.PI / 2;
+            groundMesh.receiveShadow = true;
+            scene.add(groundMesh);
+
+            // Build Target Orb
+            const targetGeo = new THREE.SphereGeometry(0.35, 32, 32);
+            const targetMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.8 });
+            targetMesh = new THREE.Mesh(targetGeo, targetMat);
+            targetMesh.position.set(0, 0.35, -4);
+            targetMesh.castShadow = true;
+            scene.add(targetMesh);
+
+            // Target Physics Ghost Body
+            targetBody = new CANNON.Body({ mass: 0 });
+            targetBody.addShape(new CANNON.Sphere(0.35));
+            targetBody.position.copy(targetMesh.position);
+            world.addBody(targetBody);
+
+            // Build 6-Cube "Square Dude" Character
+            createSquareDude();
+
+            // Handle Resize & Touch Setup
+            window.addEventListener('resize', onWindowResize);
+            canvas.addEventListener('pointerdown', onCanvasPointerDown);
+        }
+
+        // --- Create 6-Square/Cube Character ---
+        function createSquareDude() {
+            // Clean up existing if any
+            dudeParts.forEach(p => {
+                scene.remove(p.mesh);
+                world.remove(p.body);
+            });
+            dudeParts = [];
+
+            // Face texture generation on HTML5 Canvas
+            const faceCanvas = document.createElement('canvas');
+            faceCanvas.width = 128; faceCanvas.height = 128;
+            const ctx = faceCanvas.getContext('2d');
+            ctx.fillStyle = '#6366f1'; ctx.fillRect(0, 0, 128, 128);
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(38, 45, 12, 0, Math.PI * 2); ctx.fill(); // Left eye
+            ctx.beginPath(); ctx.arc(90, 45, 12, 0, Math.PI * 2); ctx.fill(); // Right eye
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath(); ctx.arc(38, 45, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(90, 45, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 6; ctx.beginPath();
+            ctx.arc(64, 75, 20, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke(); // Cute mouth
+            const faceTexture = new THREE.CanvasTexture(faceCanvas);
+
+            // Cube Specifications (6 main body parts)
+            const specs = [
+                { name: 'torso', size: [0.8, 0.9, 0.5], pos: [0, 1.4, 0], mass: 4, color: 0x4f46e5 },
+                { name: 'head', size: [0.55, 0.55, 0.55], pos: [0, 2.15, 0], mass: 1, color: 0x6366f1, face: true },
+                { name: 'armL', size: [0.3, 0.7, 0.3], pos: [-0.6, 1.4, 0], mass: 0.8, color: 0x818cf8 },
+                { name: 'armR', size: [0.3, 0.7, 0.3], pos: [0.6, 1.4, 0], mass: 0.8, color: 0x818cf8 },
+                { name: 'legL', size: [0.35, 0.75, 0.35], pos: [-0.25, 0.55, 0], mass: 1.2, color: 0x312e81 },
+                { name: 'legR', size: [0.35, 0.75, 0.35], pos: [0.25, 0.55, 0], mass: 1.2, color: 0x312e81 }
+            ];
+
+            const partsMap = {};
+
+            specs.forEach(s => {
+                // Three visual mesh
+                const geo = new THREE.BoxGeometry(...s.size);
+                let mat;
+                if (s.face) {
+                    const materials = Array(6).fill(new THREE.MeshStandardMaterial({ color: s.color, roughness: 0.4 }));
+                    materials[4] = new THREE.MeshStandardMaterial({ map: faceTexture, roughness: 0.4 }); // Front face
+                    mat = materials;
+                } else {
+                    mat = new THREE.MeshStandardMaterial({ color: s.color, roughness: 0.5 });
+                }
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.castShadow = true;
+                scene.add(mesh);
+
+                // Cannon physics body
+                const halfExtents = new CANNON.Vec3(s.size[0] / 2, s.size[1] / 2, s.size[2] / 2);
+                const body = new CANNON.Body({
+                    mass: s.mass,
+                    position: new CANNON.Vec3(...s.pos),
+                    shape: new CANNON.Box(halfExtents),
+                    linearDamping: 0.1,
+                    angularDamping: 0.2
+                });
+                world.addBody(body);
+
+                const partObj = { name: s.name, mesh, body };
+                dudeParts.push(partObj);
+                partsMap[s.name] = body;
+            });
+
+            // Connect Joints using Cannon Hinge Constraints
+            const torso = partsMap['torso'];
+
+            // Head Joint
+            const headHinge = new CANNON.HingeConstraint(torso, partsMap['head'], {
+                pivotA: new CANNON.Vec3(0, 0.5, 0),
+                pivotB: new CANNON.Vec3(0, -0.3, 0),
+                axisA: new CANNON.Vec3(1, 0, 0),
+                axisB: new CANNON.Vec3(1, 0, 0)
+            });
+            world.addConstraint(headHinge);
+
+            // Left Arm Hinge
+            jointConstraints['armL'] = new CANNON.HingeConstraint(torso, partsMap['armL'], {
+                pivotA: new CANNON.Vec3(-0.55, 0.35, 0),
+                pivotB: new CANNON.Vec3(0, 0.35, 0),
+                axisA: new CANNON.Vec3(1, 0, 0),
+                axisB: new CANNON.Vec3(1, 0, 0)
+            });
+            world.addConstraint(jointConstraints['armL']);
+
+            // Right Arm Hinge
+            jointConstraints['armR'] = new CANNON.HingeConstraint(torso, partsMap['armR'], {
+                pivotA: new CANNON.Vec3(0.55, 0.35, 0),
+                pivotB: new CANNON.Vec3(0, 0.35, 0),
+                axisA: new CANNON.Vec3(1, 0, 0),
+                axisB: new CANNON.Vec3(1, 0, 0)
+            });
+            world.addConstraint(jointConstraints['armR']);
+
+            // Left Leg Hinge
+            jointConstraints['legL'] = new CANNON.HingeConstraint(torso, partsMap['legL'], {
+                pivotA: new CANNON.Vec3(-0.25, -0.5, 0),
+                pivotB: new CANNON.Vec3(0, 0.4, 0),
+                axisA: new CANNON.Vec3(1, 0, 0),
+                axisB: new CANNON.Vec3(1, 0, 0)
+            });
+            world.addConstraint(jointConstraints['legL']);
+
+            // Right Leg Hinge
+            jointConstraints['legR'] = new CANNON.HingeConstraint(torso, partsMap['legR'], {
+                pivotA: new CANNON.Vec3(0.25, -0.5, 0),
+                pivotB: new CANNON.Vec3(0, 0.4, 0),
+                axisA: new CANNON.Vec3(1, 0, 0),
+                axisB: new CANNON.Vec3(1, 0, 0)
+            });
+            world.addConstraint(jointConstraints['legR']);
+
+            // Enable motors on arm & leg joints
+            Object.values(jointConstraints).forEach(j => j.enableMotor());
+        }
+
+        // --- Get Environment State Observation ---
+        function getObservation() {
+            const torso = dudeParts.find(p => p.name === 'torso').body;
+            const pos = torso.position;
+            const vel = torso.velocity;
+            const tPos = targetBody.position;
+
+            const dx = tPos.x - pos.x;
+            const dz = tPos.z - pos.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+
+            // Upright orientation check (Y axis dot product)
+            const upVector = new CANNON.Vec3(0, 1, 0);
+            const torsoUp = torso.quaternion.vmult(upVector);
+            const isUpright = torsoUp.y > 0.6;
+
+            return {
+                step: state.stepCount,
+                dudePos: { x: pos.x.toFixed(2), y: pos.y.toFixed(2), z: pos.z.toFixed(2) },
+                targetPos: { x: tPos.x.toFixed(2), z: tPos.z.toFixed(2) },
+                distance: distance.toFixed(2),
+                speed: vel.length().toFixed(2),
+                isUpright: isUpright,
+                height: pos.y.toFixed(2)
+            };
+        }
+
+        // --- Apply Motor Actions to Square Dude Physics ---
+        function applyActions(actions) {
+            // actions: { armL_speed, armR_speed, legL_speed, legR_speed, torso_impulse }
+            const maxMotorSpeed = 8.0;
+
+            if (actions.armL_speed !== undefined && jointConstraints['armL']) {
+                jointConstraints['armL'].setMotorSpeed(Math.max(-1, Math.min(1, actions.armL_speed)) * maxMotorSpeed);
+            }
+            if (actions.armR_speed !== undefined && jointConstraints['armR']) {
+                jointConstraints['armR'].setMotorSpeed(Math.max(-1, Math.min(1, actions.armR_speed)) * maxMotorSpeed);
+            }
+            if (actions.legL_speed !== undefined && jointConstraints['legL']) {
+                jointConstraints['legL'].setMotorSpeed(Math.max(-1, Math.min(1, actions.legL_speed)) * maxMotorSpeed);
+            }
+            if (actions.legR_speed !== undefined && jointConstraints['legR']) {
+                jointConstraints['legR'].setMotorSpeed(Math.max(-1, Math.min(1, actions.legR_speed)) * maxMotorSpeed);
+            }
+
+            // Apply slight directional push or torque impulse if AI commands it
+            if (actions.push_z !== undefined) {
+                const torso = dudeParts.find(p => p.name === 'torso').body;
+                const force = Math.max(-15, Math.min(15, actions.push_z));
+                torso.applyLocalForce(new CANNON.Vec3(0, 0, force), new CANNON.Vec3(0, 0, 0));
+            }
+        }
+
+        // --- Calculate Reward Signal ---
+        function calculateReward(prevObs, newObs) {
+            const distDelta = parseFloat(prevObs.distance) - parseFloat(newObs.distance);
+            let reward = distDelta * 10.0; // Reward for moving closer to target
+
+            if (newObs.isUpright) {
+                reward += 0.5; // Bonus for staying balanced
+            } else {
+                reward -= 1.0; // Penalty for falling over
+            }
+
+            if (parseFloat(newObs.distance) < 0.6) {
+                reward += 20.0; // Big goal achievement reward
+            }
+
+            return reward;
+        }
+
+        // --- AI API Learning Loop Request ---
+        async function runAILearningStep() {
+            if (!state.isTraining) return;
+
+            const obs = getObservation();
+
+            // System prompt defining the RL controller environment
+            const systemPrompt = `You are a physical Motor Control RL Neural Policy governing a 3D Square Character ("Square Dude") made of 6 hinged blocks.
+Your objective: "${state.goal}".
+
+Rules for output:
+1. You must output ONLY a valid JSON object.
+2. The JSON must have this exact schema:
+{
+  "thought": "Short explanation of your physical motor strategy based on observation and reward",
+  "actions": {
+    "legL_speed": number (-1.0 to 1.0),
+    "legR_speed": number (-1.0 to 1.0),
+    "armL_speed": number (-1.0 to 1.0),
+    "armR_speed": number (-1.0 to 1.0),
+    "push_z": number (-10.0 to 10.0 forward force)
+  },
+  "learned_policy_insight": "One line memory note of what motor torque pattern works best"
+}`;
+
+            // Build conversation history with recent experience buffer
+            const userPrompt = `[Current State Observation]
+- Step: ${obs.step}
+- Position: (${obs.dudePos.x}, ${obs.dudePos.y}, ${obs.dudePos.z})
+- Target Position: (${obs.targetPos.x}, ${obs.targetPos.z})
+- Distance to Target: ${obs.distance}m
+- Upright Balanced: ${obs.isUpright}
+- Last Step Reward: ${state.lastReward.toFixed(2)}
+
+Top Learned High-Reward Trajectories in Memory:
+${JSON.stringify(state.memoryBuffer.slice(-3), null, 2)}
+
+Determine the optimal leg/arm torque motor speeds to move closer to target without falling over.`;
+
+            try {
+                const response = await fetch(`${state.apiBaseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.apiKey}`,
+                        'HTTP-Referer': 'https://localhost',
+                        'X-Title': '3D Square Dude AI'
+                    },
+                    body: JSON.stringify({
+                        model: state.model,
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userPrompt }
+                        ],
+                        temperature: 0.4,
+                        max_tokens: 250
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.text();
+                    throw new Error(`API Error ${response.status}: ${err}`);
+                }
+
+                const data = await response.json();
+                const rawContent = data.choices[0].message.content;
+
+                // Clean & Parse JSON response
+                const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("AI did not return a valid JSON motor response");
+
+                const aiOutput = JSON.parse(jsonMatch[0]);
+
+                // Log thought stream
+                logAIThought(aiOutput.thought, aiOutput.learned_policy_insight);
+
+                // Execute actions in physics engine
+                const prevObs = obs;
+                applyActions(aiOutput.actions);
+
+                // Run physics simulation forward for several ticks to see action result
+                for (let i = 0; i < 20; i++) {
+                    world.step(1 / 60);
+                }
+
+                const postObs = getObservation();
+                const reward = calculateReward(prevObs, postObs);
+                state.lastReward = reward;
+                state.stepCount++;
+
+                // Save to memory buffer if successful
+                if (reward > 0) {
+                    state.memoryBuffer.push({
+                        actions: aiOutput.actions,
+                        reward: reward.toFixed(2),
+                        insight: aiOutput.learned_policy_insight
+                    });
+                    if (state.memoryBuffer.length > 10) state.memoryBuffer.shift();
+                }
+
+                updateTelemetry(postObs, reward);
+
+            } catch (err) {
+                console.error(err);
+                logAIThought(`Error: ${err.message}`, "Check API key or model availability");
+                toggleTraining(false);
+            }
+
+            // Loop step if training is still active
+            if (state.isTraining) {
+                setTimeout(runAILearningStep, 400); // Step delay for step-by-step observation
+            }
+        }
+
+        // --- UI & Helper Functions ---
+        function logAIThought(thought, insight) {
+            const logContainer = document.getElementById('ai-thought-log');
+            const item = document.createElement('div');
+            item.className = "border-l-2 border-indigo-500 pl-2 my-1";
+            item.innerHTML = `
+                <div class="text-slate-200">${thought || 'Processing motor commands...'}</div>
+                ${insight ? `<div class="text-[10px] text-emerald-400 font-semibold">💡 ${insight}</div>` : ''}
+            `;
+            logContainer.prepend(item);
+            if (logContainer.children.length > 20) logContainer.removeChild(logContainer.lastChild);
+        }
+
+        function updateTelemetry(obs, reward) {
+            document.getElementById('tel-distance').innerText = `${obs.distance}m`;
+            document.getElementById('tel-reward').innerText = reward.toFixed(2);
+            document.getElementById('tel-steps').innerText = obs.step;
+            document.getElementById('tel-pose').innerText = obs.isUpright ? 'Upright' : 'Fallen';
+            document.getElementById('tel-pose').className = `font-mono ${obs.isUpright ? 'text-emerald-400' : 'text-rose-400'}`;
+        }
+
+        function toggleTraining(forceState) {
+            state.isTraining = forceState !== undefined ? forceState : !state.isTraining;
+
+            const btn = document.getElementById('btn-toggle-train');
+            const label = document.getElementById('train-btn-label');
+            const icon = document.getElementById('play-icon');
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+
+            if (state.isTraining) {
+                if (!state.apiKey) {
+                    alert("Please enter an API Key in settings before starting AI training!");
+                    document.getElementById('settings-modal').classList.remove('hidden');
+                    state.isTraining = false;
+                    return;
+                }
+                btn.className = "bg-rose-600 hover:bg-rose-500 text-white px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition active:scale-95 shadow-md";
+                label.innerText = "Pause Training";
+                icon.setAttribute('data-lucide', 'pause');
+                statusIndicator.className = "w-3 h-3 rounded-full bg-emerald-400 animate-ping";
+                statusText.innerText = "AI Policy Learning Active";
+                runAILearningStep();
+            } else {
+                btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition active:scale-95 shadow-md";
+                label.innerText = "Start Learning";
+                icon.setAttribute('data-lucide', 'play');
+                statusIndicator.className = "w-3 h-3 rounded-full bg-amber-400";
+                statusText.innerText = "Training Paused";
+            }
+            lucide.createIcons();
+        }
+
+        function resetCharacter() {
+            createSquareDude();
+            state.stepCount = 0;
+            state.lastReward = 0;
+            const obs = getObservation();
+            updateTelemetry(obs, 0);
+            logAIThought("Character pose reset to origin.", "Environment restarted");
+        }
+
+        function onCanvasPointerDown(event) {
+            if (!state.isMovingTarget) return;
+
+            touchVector.x = (event.clientX / window.innerWidth) * 2 - 1;
+            touchVector.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(touchVector, camera);
+            const intersects = raycaster.intersectObjects(scene.children);
+
+            for (let i = 0; i < intersects.length; i++) {
+                if (intersects[i].object !== targetMesh) {
+                    const p = intersects[i].point;
+                    targetMesh.position.set(p.x, 0.35, p.z);
+                    targetBody.position.set(p.x, 0.35, p.z);
+                    logAIThought(`Target relocated to (${p.x.toFixed(1)}, ${p.z.toFixed(1)})`, "New target set for Square Dude");
+                    state.isMovingTarget = false;
+                    document.getElementById('btn-move-target').classList.remove('ring-2', 'ring-emerald-400');
+                    break;
+                }
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- Render & Physics Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Step Physics
+            world.step(1 / 60);
+
+            // Synchronize Three.js visual meshes with Cannon.js physics bodies
+            dudeParts.forEach(part => {
+                part.mesh.position.copy(part.body.position);
+                part.mesh.quaternion.copy(part.body.quaternion);
+            });
+
+            // Target mesh subtle hover animation
+            targetMesh.rotation.y += 0.02;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // --- Event Listeners Setup ---
+        document.getElementById('btn-toggle-train').addEventListener('click', () => toggleTraining());
+        document.getElementById('btn-reset-dude').addEventListener('click', resetCharacter);
+
+        document.getElementById('btn-move-target').addEventListener('click', () => {
+            state.isMovingTarget = !state.isMovingTarget;
+            const btn = document.getElementById('btn-move-target');
+            if (state.isMovingTarget) {
+                btn.classList.add('ring-2', 'ring-emerald-400');
+                logAIThought("Tap anywhere on the floor grid to place target orb", "Interactive Placement Mode");
+            } else {
+                btn.classList.remove('ring-2', 'ring-emerald-400');
+            }
+        });
+
+        // Settings Modal Handlers
+        document.getElementById('btn-settings').addEventListener('click', () => {
+            document.getElementById('settings-modal').classList.remove('hidden');
+        });
+        document.getElementById('btn-close-modal').addEventListener('click', () => {
+            document.getElementById('settings-modal').classList.add('hidden');
+        });
+
+        document.getElementById('api-provider-select').addEventListener('change', (e) => {
+            const customUrlDiv = document.getElementById('custom-url-container');
+            if (e.target.value === 'custom') {
+                customUrlDiv.classList.remove('hidden');
+            } else {
+                customUrlDiv.classList.add('hidden');
+                document.getElementById('api-base-url').value = e.target.value;
+            }
+        });
+
+        document.getElementById('model-preset-select').addEventListener('change', (e) => {
+            const customModelInput = document.getElementById('model-custom-input');
+            if (e.target.value === 'custom') {
+                customModelInput.classList.remove('hidden');
+            } else {
+                customModelInput.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('btn-save-settings').addEventListener('click', () => {
+            const key = document.getElementById('api-key').value.trim();
+            const baseUrl = document.getElementById('api-provider-select').value === 'custom' 
+                ? document.getElementById('api-base-url').value.trim() 
+                : document.getElementById('api-provider-select').value;
+
+            const modelSelect = document.getElementById('model-preset-select').value;
+            const model = modelSelect === 'custom' 
+                ? document.getElementById('model-custom-input').value.trim() 
+                : modelSelect;
+
+            const goal = document.getElementById('ai-prompt-goal').value.trim();
+
+            state.apiKey = key;
+            state.apiBaseUrl = baseUrl;
+            state.model = model;
+            state.goal = goal;
+
+            localStorage.setItem('sqd_api_key', key);
+            localStorage.setItem('sqd_api_base_url', baseUrl);
+            localStorage.setItem('sqd_model', model);
+            localStorage.setItem('sqd_goal', goal);
+
+            document.getElementById('active-model-tag').innerText = model.split('/')[1] || model;
+            document.getElementById('settings-modal').classList.add('hidden');
+            logAIThought("Configuration updated successfully.", `Active model: ${model}`);
+        });
+
+        // Start Application
+        window.onload = () => {
+            init3D();
+            animate();
+        };
+  </script>
+</body>
+
+</html>
