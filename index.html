@@ -5,31 +5,23 @@
   <meta charset="utf-8">
   <meta name="viewport"
     content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#07090d">
-  <title>Square Dude AI — Kinematic Lab</title>
-
+  <title>Square Dude AI — Ragdoll Control Lab</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
   <style>
     :root {
-      --bg: #06080c;
-      --surface: rgba(19, 23, 30, .74);
-      --surface-strong: rgba(12, 16, 22, .91);
-      --surface-soft: rgba(255, 255, 255, .045);
-      --line: rgba(255, 255, 255, .105);
-      --line-bright: rgba(255, 255, 255, .18);
-      --text: #f2f5f7;
-      --muted: #89929e;
-      --dim: #5d6671;
-      --plasma: #b8f5ff;
-      --plasma-2: #6bd8ff;
-      --green: #9df2c1;
-      --red: #ff8e96;
-      --shadow: 0 18px 70px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .055);
-      --r-xl: 20px;
-      --r-lg: 14px;
-      --r-md: 10px;
+      --bg: #05070a;
+      --glass: rgba(15, 19, 24, .76);
+      --glass2: rgba(8, 11, 15, .88);
+      --line: rgba(255, 255, 255, .11);
+      --text: #eef2f5;
+      --muted: #8c96a0;
+      --dim: #58616b;
+      --ice: #b9f5ff;
+      --ice2: #6bd9ff;
+      --ok: #9ce9c0;
+      --bad: #ff9aa2;
+      --r: 17px
     }
 
     * {
@@ -46,17 +38,17 @@
       overflow: hidden;
       background: var(--bg);
       color: var(--text);
-      font: 13px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
+      font: 12px Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
     }
 
     button,
     input,
-    select {
+    select,
+    textarea {
       font: inherit
     }
 
     button {
-      border: 0;
       color: inherit
     }
 
@@ -73,234 +65,209 @@
       touch-action: none
     }
 
-    #app {
+    #ui {
       position: fixed;
       inset: 0;
-      z-index: 5;
+      z-index: 4;
       pointer-events: none
     }
 
-    .chrome {
-      pointer-events: auto
-    }
-
-    .plasma {
-      background:
-        radial-gradient(circle at 15% 0%, rgba(155, 238, 255, .12), transparent 36%),
-        radial-gradient(circle at 85% 100%, rgba(100, 210, 255, .055), transparent 42%),
-        linear-gradient(145deg, rgba(255, 255, 255, .072), rgba(255, 255, 255, .025) 48%, rgba(0, 0, 0, .18));
+    .glass {
+      position: relative;
+      background: linear-gradient(145deg, rgba(255, 255, 255, .065), rgba(255, 255, 255, .018)), radial-gradient(circle at 10% 0%, rgba(170, 241, 255, .09), transparent 35%);
       border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(22px) saturate(145%);
-      -webkit-backdrop-filter: blur(22px) saturate(145%);
+      box-shadow: 0 20px 70px rgba(0, 0, 0, .4), inset 0 1px rgba(255, 255, 255, .055);
+      backdrop-filter: blur(22px) saturate(135%);
+      -webkit-backdrop-filter: blur(22px) saturate(135%)
     }
 
-    .plasma:before {
-      content: "";
+    .top {
       position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      pointer-events: none;
-      background: linear-gradient(120deg, rgba(255, 255, 255, .075), transparent 24%, transparent 74%, rgba(132, 225, 255, .045));
-      opacity: .8;
-    }
-
-    .topbar {
-      position: absolute;
-      left: 16px;
-      right: 16px;
-      top: 14px;
-      height: 58px;
-      border-radius: 18px;
+      left: 14px;
+      right: 14px;
+      top: 12px;
+      height: 56px;
+      border-radius: 16px;
+      padding: 0 10px 0 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 12px 0 16px;
+      pointer-events: auto
     }
 
     .brand {
       display: flex;
-      align-items: center;
-      gap: 11px
+      gap: 10px;
+      align-items: center
     }
 
-    .mark {
-      width: 31px;
-      height: 31px;
-      border: 1px solid rgba(190, 244, 255, .4);
-      border-radius: 9px;
+    .logo {
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(185, 245, 255, .4);
+      border-radius: 8px;
       display: grid;
       place-items: center;
-      position: relative;
-      background: rgba(175, 238, 255, .075);
-      box-shadow: inset 0 0 18px rgba(110, 220, 255, .08), 0 0 22px rgba(110, 220, 255, .06)
+      background: rgba(185, 245, 255, .06)
     }
 
-    .mark i {
-      width: 11px;
-      height: 11px;
-      border: 1.5px solid var(--plasma);
-      display: block;
-      transform: rotate(45deg);
-      opacity: .9
+    .logo i {
+      width: 10px;
+      height: 10px;
+      border: 1px solid var(--ice);
+      transform: rotate(45deg)
     }
 
-    .brand h1 {
+    h1 {
       font-size: 12px;
-      letter-spacing: .12em;
-      font-weight: 750
+      letter-spacing: .13em
     }
 
-    .brand p {
-      font-size: 10px;
+    .brand small {
       color: var(--muted);
-      margin-top: 1px;
-      letter-spacing: .04em
+      font-size: 9px;
+      letter-spacing: .05em
     }
 
-    .top-actions {
+    .topright {
       display: flex;
-      align-items: center;
-      gap: 7px
+      gap: 7px;
+      align-items: center
     }
 
-    .icon-btn,
-    .status {
-      height: 34px;
+    .status,
+    .icon {
+      height: 32px;
       border: 1px solid var(--line);
       background: rgba(255, 255, 255, .035);
-      border-radius: 10px;
+      border-radius: 9px;
       display: flex;
       align-items: center;
-      justify-content: center;
-    }
-
-    .icon-btn {
-      width: 36px;
-      cursor: pointer;
-      transition: .16s
-    }
-
-    .icon-btn:hover {
-      background: rgba(255, 255, 255, .08);
-      border-color: var(--line-bright)
-    }
-
-    .icon-btn:active {
-      transform: scale(.96)
+      justify-content: center
     }
 
     .status {
-      padding: 0 11px;
+      padding: 0 10px;
       gap: 7px;
-      font-size: 10px;
-      color: #b9c1ca
+      color: #aeb7bf;
+      font-size: 9px
+    }
+
+    .icon {
+      width: 34px;
+      cursor: pointer
+    }
+
+    .icon:hover {
+      background: rgba(255, 255, 255, .08)
     }
 
     .dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #9aa3ad;
-      box-shadow: 0 0 0 3px rgba(154, 163, 173, .08)
+      background: #79838d
     }
 
-    .dot.active {
-      background: var(--green);
-      box-shadow: 0 0 10px rgba(157, 242, 193, .7)
+    .dot.on {
+      background: var(--ok);
+      box-shadow: 0 0 10px var(--ok)
     }
 
     .layout {
       position: absolute;
-      left: 16px;
-      right: 16px;
-      top: 86px;
-      bottom: 16px;
+      left: 14px;
+      right: 14px;
+      top: 80px;
+      bottom: 14px;
       display: grid;
-      grid-template-columns: 300px minmax(0, 1fr) 320px;
-      gap: 12px;
-    }
-
-    .panel {
-      position: relative;
-      border-radius: var(--r-xl);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-height: 0
-    }
-
-    .panel-inner {
-      position: relative;
-      z-index: 1;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      min-height: 0;
-      height: 100%
-    }
-
-    .panel-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      grid-template-columns: 295px minmax(420px, 1fr) 330px;
       gap: 10px
     }
 
-    .kicker {
+    .panel {
+      border-radius: var(--r);
+      overflow: hidden;
+      pointer-events: auto;
+      min-height: 0
+    }
+
+    .pad {
+      padding: 14px;
+      height: 100%;
+      overflow: auto
+    }
+
+    .pad::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .pad::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .13);
+      border-radius: 5px
+    }
+
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px
+    }
+
+    .k {
       font-size: 10px;
       font-weight: 750;
-      letter-spacing: .13em;
-      text-transform: uppercase;
-      color: #c9d0d7
+      letter-spacing: .14em;
+      text-transform: uppercase
     }
 
-    .sub {
-      font-size: 10px;
-      color: var(--dim)
-    }
-
-    .section {
-      border-top: 1px solid rgba(255, 255, 255, .065);
-      padding-top: 12px
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 9px
+    .dim {
+      color: var(--dim);
+      font-size: 9px
     }
 
     label {
-      font-size: 10px;
+      display: block;
       color: var(--muted);
-      font-weight: 650;
-      letter-spacing: .025em
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      margin-bottom: 5px
+    }
+
+    .field {
+      margin-bottom: 10px
     }
 
     input,
-    select {
+    select,
+    textarea {
       width: 100%;
-      height: 34px;
-      border-radius: 9px;
       border: 1px solid var(--line);
       background: rgba(0, 0, 0, .22);
       color: var(--text);
-      padding: 0 10px;
-      outline: none;
+      border-radius: 8px;
+      min-height: 33px;
+      padding: 7px 9px;
+      outline: none
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px
     }
 
     input:focus,
-    select:focus {
-      border-color: rgba(184, 245, 255, .42);
-      box-shadow: 0 0 0 3px rgba(110, 220, 255, .07)
+    select:focus,
+    textarea:focus {
+      border-color: rgba(185, 245, 255, .4);
+      box-shadow: 0 0 0 3px rgba(110, 220, 255, .06)
     }
 
     select option {
-      background: #11151b;
-      color: #fff
+      background: #101419
     }
 
     .row {
@@ -313,261 +280,66 @@
     }
 
     .btn {
-      height: 35px;
-      border-radius: 9px;
-      padding: 0 11px;
-      cursor: pointer;
+      min-height: 34px;
+      border-radius: 8px;
       border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .055);
-      font-weight: 650;
-      transition: .16s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
+      background: rgba(255, 255, 255, .045);
+      cursor: pointer;
+      padding: 0 10px;
+      font-weight: 650
     }
 
     .btn:hover {
-      background: rgba(255, 255, 255, .09);
-      border-color: var(--line-bright)
-    }
-
-    .btn:active {
-      transform: translateY(1px) scale(.99)
+      background: rgba(255, 255, 255, .08)
     }
 
     .btn.primary {
-      color: #061017;
-      border-color: rgba(194, 247, 255, .45);
-      background: linear-gradient(135deg, #d9fbff, #79dcff);
-      box-shadow: 0 7px 25px rgba(105, 214, 255, .16), inset 0 1px 0 rgba(255, 255, 255, .75);
+      background: linear-gradient(135deg, #d7fbff, #6fd8ff);
+      color: #061016;
+      border-color: rgba(210, 250, 255, .45);
+      box-shadow: 0 8px 25px rgba(80, 210, 255, .12)
     }
 
-    .btn.danger {
-      color: #ffb0b5;
-      background: rgba(255, 100, 110, .055);
-      border-color: rgba(255, 120, 130, .18)
+    .btn.bad {
+      color: #ffabb1;
+      background: rgba(255, 100, 110, .05);
+      border-color: rgba(255, 100, 110, .18)
     }
 
-    .btn.small {
-      height: 29px;
-      font-size: 10px;
-      padding: 0 9px
+    .btn:disabled {
+      opacity: .45;
+      cursor: not-allowed
     }
 
-    .hidden {
-      display: none !important
+    .section {
+      border-top: 1px solid rgba(255, 255, 255, .06);
+      padding-top: 12px;
+      margin-top: 12px
     }
 
-    .viewport {
-      position: relative;
-      border-radius: var(--r-xl);
-      overflow: hidden;
-      pointer-events: auto;
-      border: 1px solid rgba(255, 255, 255, .075);
-      background: rgba(5, 8, 12, .22);
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 20px 80px rgba(0, 0, 0, .2)
-    }
-
-    .viewport:after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, .25) 100%);
-    }
-
-    .viewport-top,
-    .viewport-bottom {
-      position: absolute;
-      left: 12px;
-      right: 12px;
-      display: flex;
-      justify-content: space-between;
-      z-index: 4;
-      pointer-events: none
-    }
-
-    .viewport-top {
-      top: 12px
-    }
-
-    .viewport-bottom {
-      bottom: 12px;
-      align-items: flex-end
-    }
-
-    .hud {
-      display: flex;
-      gap: 6px;
-      pointer-events: auto
-    }
-
-    .chip {
-      min-height: 29px;
-      padding: 0 9px;
-      border-radius: 9px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #aeb7c0;
-      font-size: 10px;
-      background: rgba(7, 10, 14, .48);
-      border: 1px solid rgba(255, 255, 255, .08);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px)
-    }
-
-    .chip strong {
-      color: #e8edf1;
-      font-weight: 700
-    }
-
-    .crosshair {
-      position: absolute;
-      inset: 50% auto auto 50%;
-      width: 17px;
-      height: 17px;
-      transform: translate(-50%, -50%);
-      opacity: .3;
-      pointer-events: none
-    }
-
-    .crosshair:before,
-    .crosshair:after {
-      content: "";
-      position: absolute;
-      background: #d8f7ff
-    }
-
-    .crosshair:before {
-      width: 1px;
-      height: 100%;
-      left: 8px
-    }
-
-    .crosshair:after {
-      height: 1px;
-      width: 100%;
-      top: 8px
-    }
-
-    .scroll {
-      overflow: auto;
-      min-height: 0;
-      padding-right: 2px
-    }
-
-    .scroll::-webkit-scrollbar {
-      width: 5px
-    }
-
-    .scroll::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, .13);
-      border-radius: 10px
-    }
-
-    .log {
-      min-height: 145px;
-      max-height: 250px;
-      overflow: auto;
-      border-radius: 11px;
-      border: 1px solid rgba(255, 255, 255, .065);
-      background: rgba(0, 0, 0, .24);
-      padding: 10px;
-      font: 10px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
-      color: #8f9aa5;
-      white-space: pre-wrap;
-    }
-
-    .log::-webkit-scrollbar {
-      width: 4px
-    }
-
-    .log::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, .1)
-    }
-
-    .log .line {
-      margin-bottom: 8px
-    }
-
-    .log .time {
-      color: #4e5964
-    }
-
-    .log .ok {
-      color: #a9e9c5
-    }
-
-    .log .warn {
-      color: #ffd18a
-    }
-
-    .log .err {
-      color: #ff9ca3
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 7px
-    }
-
-    .stat {
-      padding: 10px;
-      border: 1px solid rgba(255, 255, 255, .065);
-      border-radius: 10px;
-      background: rgba(0, 0, 0, .18)
-    }
-
-    .stat b {
-      display: block;
-      font-size: 16px;
-      letter-spacing: -.02em
-    }
-
-    .stat span {
+    .note {
       font-size: 9px;
       color: var(--dim);
-      text-transform: uppercase;
-      letter-spacing: .08em
-    }
-
-    .stat b.accent {
-      color: #c8f7ff
-    }
-
-    .telemetry {
-      border: 1px solid rgba(255, 255, 255, .065);
-      background: rgba(0, 0, 0, .18);
-      border-radius: 10px;
-      padding: 9px;
-      font: 10px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace;
-      color: #87929d
-    }
-
-    .telemetry b {
-      color: #dbe2e7;
-      font-weight: 500
+      line-height: 1.55
     }
 
     .toggle {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      border: 1px solid rgba(255, 255, 255, .065);
-      border-radius: 10px;
+      align-items: center;
       padding: 9px;
-      background: rgba(0, 0, 0, .15)
+      border: 1px solid rgba(255, 255, 255, .065);
+      border-radius: 9px;
+      background: rgba(0, 0, 0, .12);
+      margin-bottom: 7px
     }
 
     .switch {
-      width: 35px;
+      width: 34px;
       height: 19px;
       border-radius: 20px;
-      background: #252c34;
-      border: 1px solid rgba(255, 255, 255, .1);
+      background: #252c33;
+      border: 1px solid var(--line);
       padding: 2px;
       cursor: pointer
     }
@@ -576,114 +348,242 @@
       display: block;
       width: 13px;
       height: 13px;
+      background: #78828c;
       border-radius: 50%;
-      background: #87919b;
       transition: .18s
     }
 
     .switch.on {
-      background: rgba(130, 220, 255, .18);
-      border-color: rgba(130, 220, 255, .3)
+      background: rgba(110, 220, 255, .16);
+      border-color: rgba(110, 220, 255, .3)
     }
 
     .switch.on i {
-      transform: translateX(16px);
-      background: #c8f7ff;
-      box-shadow: 0 0 10px rgba(130, 220, 255, .5)
+      transform: translateX(15px);
+      background: var(--ice);
+      box-shadow: 0 0 9px rgba(110, 220, 255, .55)
     }
 
-    .toast {
-      position: absolute;
-      left: 50%;
-      bottom: 25px;
-      transform: translate(-50%, 10px);
-      opacity: 0;
-      z-index: 20;
-      padding: 9px 12px;
-      border-radius: 10px;
-      background: rgba(10, 13, 18, .86);
-      border: 1px solid var(--line);
-      backdrop-filter: blur(15px);
-      font-size: 10px;
-      color: #dce3e8;
-      transition: .22s;
+    .viewport {
+      position: relative;
+      border-radius: var(--r);
+      overflow: hidden;
+      pointer-events: auto;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(0, 0, 0, .16);
+      min-width: 0
+    }
+
+    .viewport>* {
       pointer-events: none
     }
 
-    .toast.show {
-      opacity: 1;
-      transform: translate(-50%, 0)
+    .hud {
+      position: absolute;
+      z-index: 3;
+      left: 10px;
+      right: 10px;
+      top: 10px;
+      display: flex;
+      justify-content: space-between
     }
 
-    .modal-backdrop {
+    .chips {
+      display: flex;
+      gap: 5px
+    }
+
+    .chip {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(5, 8, 11, .5);
+      border-radius: 8px;
+      font-size: 9px;
+      color: #9da7b0;
+      backdrop-filter: blur(12px)
+    }
+
+    .chip b {
+      color: #e3e8eb
+    }
+
+    .bottom {
+      position: absolute;
+      z-index: 3;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      display: flex;
+      justify-content: space-between
+    }
+
+    .cross {
+      position: absolute;
+      z-index: 2;
+      left: 50%;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      transform: translate(-50%, -50%);
+      opacity: .25
+    }
+
+    .cross:before,
+    .cross:after {
+      content: "";
+      position: absolute;
+      background: #dffaff
+    }
+
+    .cross:before {
+      height: 100%;
+      width: 1px;
+      left: 7px
+    }
+
+    .cross:after {
+      width: 100%;
+      height: 1px;
+      top: 7px
+    }
+
+    .log {
+      height: 190px;
+      overflow: auto;
+      border: 1px solid rgba(255, 255, 255, .065);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .2);
+      padding: 9px;
+      font: 9px/1.55 ui-monospace, monospace;
+      color: #87929c
+    }
+
+    .log div {
+      margin-bottom: 7px
+    }
+
+    .log .ok {
+      color: #a8e9c4
+    }
+
+    .log .bad {
+      color: #ff9ca3
+    }
+
+    .log .time {
+      color: #4f5963
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px
+    }
+
+    .stat {
+      padding: 9px;
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 9px;
+      background: rgba(0, 0, 0, .15)
+    }
+
+    .stat b {
+      font-size: 15px
+    }
+
+    .stat span {
+      display: block;
+      color: var(--dim);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .08em
+    }
+
+    .tele {
+      font: 9px/1.7 ui-monospace, monospace;
+      color: #78838d;
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 9px;
+      padding: 8px;
+      background: rgba(0, 0, 0, .16)
+    }
+
+    .tele b {
+      color: #dce3e8;
+      font-weight: 500
+    }
+
+    .modebar {
+      display: flex;
+      gap: 5px
+    }
+
+    .mode {
+      flex: 1;
+      height: 29px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, .035);
+      font-size: 9px;
+      cursor: pointer
+    }
+
+    .mode.active {
+      background: rgba(185, 245, 255, .1);
+      border-color: rgba(185, 245, 255, .3);
+      color: var(--ice)
+    }
+
+    .modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, .5);
-      z-index: 50;
+      z-index: 20;
       display: none;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      background: rgba(0, 0, 0, .52);
       pointer-events: auto
     }
 
-    .modal-backdrop.open {
+    .modal.open {
       display: flex
     }
 
-    .modal {
-      position: relative;
-      width: min(520px, 100%);
-      max-height: min(700px, 90vh);
+    .modalbox {
+      width: min(620px, 100%);
+      max-height: 90vh;
       overflow: auto;
-      border-radius: 18px;
-      padding: 17px
+      border-radius: 16px;
+      padding: 15px
     }
 
-    .modal h2 {
-      font-size: 14px;
-      margin-bottom: 3px
-    }
-
-    .modal p {
-      font-size: 10px;
-      color: var(--muted);
-      margin-bottom: 15px
-    }
-
-    .modal-grid {
+    .modalgrid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px
+      gap: 8px
     }
 
-    .modal-footer {
+    .modalfoot {
       display: flex;
       justify-content: flex-end;
       gap: 7px;
-      margin-top: 15px
+      margin-top: 13px
     }
 
     @media(max-width:1050px) {
       .layout {
-        grid-template-columns: 260px minmax(0, 1fr) 275px
+        grid-template-columns: 260px minmax(300px, 1fr) 280px
       }
     }
 
-    @media(max-width:850px) {
-      .topbar {
-        left: 10px;
-        right: 10px;
-        top: 9px
-      }
-
+    @media(max-width:820px) {
       .layout {
-        left: 10px;
-        right: 10px;
-        top: 76px;
-        bottom: 10px;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(280px, 1fr) auto;
+        grid-template-rows: minmax(330px, 1fr) 245px;
         overflow: auto
       }
 
@@ -692,29 +592,16 @@
       }
 
       .viewport {
-        min-height: 0;
-        height: 100%
+        min-height: 0
       }
 
-      .layout>.panel:last-child {
-        max-height: 260px
+      .top {
+        left: 8px;
+        right: 8px;
+        top: 8px
       }
 
       .status {
-        display: none
-      }
-    }
-
-    @media(max-width:520px) {
-      .layout {
-        grid-template-rows: minmax(300px, 1fr) 245px
-      }
-
-      .brand p {
-        display: none
-      }
-
-      .top-actions .icon-btn:nth-child(1) {
         display: none
       }
     }
@@ -723,153 +610,123 @@
 
 <body>
   <div id="stage"></div>
-
-  <div id="app">
-    <header class="topbar plasma chrome">
+  <div id="ui">
+    <header class="top glass">
       <div class="brand">
-        <div class="mark"><i></i></div>
+        <div class="logo"><i></i></div>
         <div>
-          <h1>SQUARE DUDE AI</h1>
-          <p>KINEMATIC CONTROL LAB · LIQUID PLASMA UI</p>
+          <h1>SQUARE DUDE AI</h1><small>RAGDOLL PHYSICS · MULTI-STREAM MOTOR CONTROL</small>
         </div>
       </div>
-      <div class="top-actions">
-        <div class="status"><i class="dot" id="statusDot"></i><span id="statusText">SYSTEM READY</span></div>
-        <button class="icon-btn" id="undoBtn" title="Undo" aria-label="Undo">↶</button>
-        <button class="icon-btn" id="redoBtn" title="Redo" aria-label="Redo">↷</button>
-        <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">☷</button>
+      <div class="topright">
+        <div class="status"><i class="dot" id="dot"></i><span id="status">SYSTEM READY</span></div>
+        <button class="icon" id="undo">↶</button><button class="icon" id="redo">↷</button><button class="icon" id="settings">☷</button>
       </div>
     </header>
 
     <main class="layout">
-      <aside class="panel plasma chrome">
-        <div class="panel-inner">
-          <div class="panel-head"><span class="kicker">Control</span><span class="sub">01 / AI</span></div>
-          <div class="scroll">
-            <div class="field">
-              <label>PROVIDER</label>
-              <select id="provider"></select>
+      <aside class="panel glass">
+        <div class="pad">
+          <div class="head"><span class="k">Control</span><span class="dim">01 / MOTOR</span></div>
+          <div class="field">
+            <label>AI PROVIDER</label><select id="provider"><option value="openrouter">OpenRouter</option><option value="groq">Groq</option><option value="gemini">Google Gemini</option><option value="custom">Custom OpenAI-compatible</option></select>
+          </div>
+          <div class="field"><label>API KEY</label><input id="key" type="password" autocomplete="off" placeholder="Local browser storage">
+          </div>
+          <div class="field"><label>MODEL ID</label><input id="model" placeholder="e.g. openai/gpt-oss-120b"></div>
+          <div class="field hidden" id="endpointWrap"><label>ENDPOINT</label><input id="endpoint" value="https://api.openai.com/v1">
+          </div>
+          <div class="field">
+            <label>COMMAND OBJECTIVE</label><select id="goal"><option value="reach">Reach the target safely</option><option value="walk">Walk naturally</option><option value="balance">Maintain balance</option><option value="explore">Explore the environment</option><option value="dance">Perform a controlled movement sequence</option></select>
+          </div>
+          <div class="section"><label>CONTROL MODE</label>
+            <div class="modebar">
+              <button class="mode active" data-mode="ai">AI</button><button class="mode" data-mode="text">TEXT</button><button class="mode" data-mode="hybrid">HYBRID</button>
             </div>
-            <div class="field">
-              <label>MODEL</label>
-              <select id="model"></select>
+          </div>
+          <div class="field section">
+            <label>DIRECT TEXT COMMAND</label><textarea id="command" placeholder="Examples: move forward, turn left, crouch, jump, wave, stand still..."></textarea>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="run">Run command</button><button class="btn" id="step">AI step</button>
+          </div>
+          <button class="btn bad" id="reset" style="width:100%;margin-top:7px">Reset ragdoll</button>
+          <div class="section">
+            <div class="toggle">
+              <div>
+                <label style="margin:0;color:#d7dde2">PHYSICS</label><span class="note">Real gravity, impulses and joints</span>
+              </div><button class="switch on" id="physicsSwitch"><i></i></button>
             </div>
-            <div class="field" id="keyField">
-              <label>API KEY</label>
-              <input id="apiKey" type="password" autocomplete="off" placeholder="Stored locally on this device">
-            </div>
-            <div class="field hidden" id="endpointField">
-              <label>OPENAI-COMPATIBLE BASE URL</label>
-              <input id="endpoint" type="url" placeholder="https://api.openai.com/v1">
-            </div>
-            <div class="field hidden" id="customModelField">
-              <label>CUSTOM MODEL ID</label>
-              <input id="customModel" placeholder="model-name">
-            </div>
-
-            <div class="section">
-              <div class="field">
-                <label>LEARNING OBJECTIVE</label>
-                <select id="goal">
-                <option value="walk">Walk toward target</option>
-                <option value="dance">Perform a controlled dance</option>
-                <option value="wave">Wave both arms while balancing</option>
-                <option value="jump">Crouch and perform a high jump</option>
-              </select>
-              </div>
-              <div class="row">
-                <button class="btn primary" id="learnBtn">▶ Start learning</button>
-                <button class="btn" id="stepBtn">Step</button>
-              </div>
-              <button class="btn danger" id="resetBtn" style="width:100%;margin-top:7px">Reset simulation</button>
-            </div>
-
-            <div class="section">
-              <div class="toggle">
-                <div>
-                  <label style="display:block;color:#d5dbe0">REALISM MODE</label><span class="sub">Higher lighting quality</span>
-                </div>
-                <button class="switch on" id="realismSwitch" aria-label="Toggle realism"><i></i></button>
-              </div>
-              <div class="toggle" style="margin-top:7px">
-                <div>
-                  <label style="display:block;color:#d5dbe0">AUTO CAMERA</label><span class="sub">Keep subject framed</span>
-                </div>
-                <button class="switch" id="autoCameraSwitch" aria-label="Toggle auto camera"><i></i></button>
-              </div>
+            <div class="toggle">
+              <div>
+                <label style="margin:0;color:#d7dde2">AI MULTI-STREAM</label><span class="note">Parallel intent layers</span>
+              </div><button class="switch on" id="streamSwitch"><i></i></button>
             </div>
           </div>
         </div>
       </aside>
 
       <section class="viewport" id="viewport">
-        <div class="viewport-top">
-          <div class="hud">
-            <div class="chip"><strong>VIEWPORT</strong> / 3D</div>
-            <div class="chip" id="fpsChip">60 FPS</div>
+        <div class="hud">
+          <div class="chips">
+            <div class="chip"><b>PHYSICS VIEW</b>&nbsp; / 3D</div>
+            <div class="chip" id="fps">60 FPS</div>
           </div>
-          <div class="hud">
-            <div class="chip">DRAG <strong>ORBIT</strong></div>
-            <div class="chip">SCROLL <strong>ZOOM</strong></div>
+          <div class="chips">
+            <div class="chip">LEFT DRAG <b>ORBIT</b></div>
+            <div class="chip">RIGHT DRAG <b>PAN</b></div>
+            <div class="chip">WHEEL <b>ZOOM</b></div>
           </div>
         </div>
-        <div class="crosshair"></div>
-        <div class="viewport-bottom">
-          <div class="chip" id="targetChip">TARGET · 0.00 / 0.00</div>
-          <div class="chip"><strong>CLICK FLOOR</strong> TO REPOSITION TARGET</div>
+        <div class="cross"></div>
+        <div class="bottom">
+          <div class="chip" id="target">TARGET · 0.00 / -4.00</div>
+          <div class="chip"><b>CLICK FLOOR</b>&nbsp; MOVE TARGET</div>
         </div>
-        <div class="toast" id="toast"></div>
       </section>
 
-      <aside class="panel plasma chrome">
-        <div class="panel-inner">
-          <div class="panel-head"><span class="kicker">Telemetry</span><span class="sub">02 / LIVE</span></div>
+      <aside class="panel glass">
+        <div class="pad">
+          <div class="head"><span class="k">Neural streams</span><span class="dim" id="streamCount">0 / 5</span></div>
           <div class="log" id="log"></div>
           <div class="section">
             <div class="stats">
-              <div class="stat"><b class="accent" id="statSteps">0</b><span>Steps</span></div>
-              <div class="stat"><b id="statDistance">0.00m</b><span>Distance</span></div>
-              <div class="stat"><b id="statReward">0.0</b><span>Reward</span></div>
-              <div class="stat"><b id="statSpeed">0.0</b><span>Velocity</span></div>
+              <div class="stat"><b id="steps">0</b><span>Control ticks</span></div>
+              <div class="stat"><b id="distance">4.00m</b><span>Target distance</span></div>
+              <div class="stat"><b id="reward">0.0</b><span>Reward</span></div>
+              <div class="stat"><b id="energy">0%</b><span>Motor load</span></div>
             </div>
           </div>
-          <div class="section">
-            <label>JOINT STATE</label>
-            <div class="telemetry" id="jointTelemetry" style="margin-top:6px"></div>
+          <div class="section"><label>RAGDOLL STATE</label>
+            <div class="tele" id="joints"></div>
           </div>
-          <div class="section">
-            <div class="panel-head"><label>SIMULATION</label><span class="sub" id="simState">IDLE</span></div>
-            <div class="telemetry" style="margin-top:6px">
-              Target X <b id="tx">0.00</b><br>
-            Target Z <b id="tz">-4.00</b><br>
-            Root X <b id="rx">0.00</b><br>
-            Root Z <b id="rz">0.00</b>
-            </div>
+          <div class="section"><label>PHYSICS STATE</label>
+            <div class="tele" id="physics"></div>
+          </div>
+          <div class="section"><label>TEXT → MOTOR ENCODER</label>
+            <div class="tele" id="encoder">Idle — waiting for command.</div>
           </div>
         </div>
       </aside>
     </main>
+  </div>
 
-    <div class="modal-backdrop" id="modalBackdrop">
-      <div class="modal plasma">
-        <h2>System settings</h2>
-        <p>Visual, interaction and persistence controls. API credentials are kept only in this browser's local storage.
-        </p>
-        <div class="modal-grid">
-          <div class="field">
-            <label>RENDER SCALE</label><select id="renderScale"><option value="1">1×</option><option value="1.5" selected>1.5×</option><option value="2">2×</option></select>
-          </div>
-          <div class="field">
-            <label>GRID</label><select id="gridMode"><option value="full">Full</option><option value="minimal">Minimal</option><option value="off">Off</option></select>
-          </div>
-          <div class="field">
-            <label>SHADOW QUALITY</label><select id="shadowMode"><option value="low">Low</option><option value="high" selected>High</option></select>
-          </div>
-          <div class="field"><label>CAMERA FOV</label><input id="fov" type="number" min="35" max="75" value="50"></div>
+  <div class="modal" id="modal">
+    <div class="modalbox glass">
+      <div class="head"><span class="k">System settings</span><span class="dim">03 / ENGINE</span></div>
+      <div class="modalgrid">
+        <div class="field">
+          <label>RENDER SCALE</label><select id="scale"><option>1</option><option selected>1.5</option><option>2</option></select>
         </div>
-        <div class="modal-footer">
-          <button class="btn" id="closeSettings">Close</button><button class="btn primary" id="applySettings">Apply</button>
+        <div class="field"><label>CAMERA FOV</label><input id="fov" type="number" min="35" max="75" value="50"></div>
+        <div class="field">
+          <label>GRID</label><select id="grid"><option>full</option><option>minimal</option><option>off</option></select>
         </div>
+        <div class="field"><label>PHYSICS GRAVITY</label><input id="gravity" type="number" step=".1" value="-9.81">
+        </div>
+      </div>
+      <div class="modalfoot">
+        <button class="btn" id="close">Close</button><button class="btn primary" id="apply">Apply settings</button>
       </div>
     </div>
   </div>
@@ -877,493 +734,356 @@
   <script>
     "use strict";
 
-/* ---------- provider configuration ---------- */
-const PROVIDERS = {
-  openrouter: {
-    name:"OpenRouter",
-    models:[
-      ["meta-llama/llama-3.3-70b-instruct:free","Llama 3.3 70B"],
-      ["deepseek/deepseek-r1:free","DeepSeek R1"],
-      ["qwen/qwen-2.5-72b-instruct:free","Qwen 2.5 72B"],
-      ["openai/gpt-4o-mini","GPT-4o Mini"]
-    ],
-    url:"https://openrouter.ai/api/v1/chat/completions"
-  },
-  groq: {
-    name:"Groq",
-    models:[
-      ["llama-3.3-70b-versatile","Llama 3.3 70B"],
-      ["llama3-8b-8192","Llama 3 8B"]
-    ],
-    url:"https://api.groq.com/openai/v1/chat/completions"
-  },
-  gemini: {
-    name:"Google Gemini",
-    models:[
-      ["gemini-2.0-flash","Gemini 2.0 Flash"],
-      ["gemini-1.5-pro","Gemini 1.5 Pro"]
-    ],
-    url:"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-  },
-  custom: {name:"Custom OpenAI-compatible",models:[["custom","Custom model"]],url:""}
+/*
+  SQUARE DUDE AI — PHYSICS CORE
+  --------------------------------
+  This is intentionally dependency-light: Three.js provides rendering,
+  while a deterministic rigid-body/joint solver is implemented here.
+  The solver uses semi-implicit integration, gravity, damping, ground
+  collision, angular limits, spring-damper joints and motor impulses.
+
+  The AI does NOT directly teleport the character. It writes motor
+  intentions into several independent control streams. The physics core
+  resolves those intentions into forces/torques each frame.
+*/
+
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const rad=THREE.MathUtils.degToRad;
+const STORAGE="square_dude_ragdoll_v3";
+
+const cfg={
+  gravity:-9.81, physics:true, multi:true, mode:"ai",
+  provider:"openrouter", model:"openai/gpt-oss-120b", key:"",
+  endpoint:"https://api.openai.com/v1", goal:"reach"
 };
 
-const STORAGE_KEY = "square_dude_ai_liquid_plasma_v2";
+let scene,camera,renderer,controls,raycaster,pointer,floor,grid,targetMesh;
+let rig,body,head,la,ra,ll,rl;
+let clock,simTime=0,lastFPS=performance.now(),frames=0;
+let history=[],histIndex=-1,controlTicks=0;
+let target=new THREE.Vector3(0,0,-4);
+let velocity=new THREE.Vector3(), angularVelocity=new THREE.Vector3();
+let streamIntent=[
+  {name:"locomotion",weight:.34,thrust:0,yaw:0,joints:{}},
+  {name:"balance",weight:.22,thrust:0,yaw:0,joints:{}},
+  {name:"upper-body",weight:.16,thrust:0,yaw:0,joints:{}},
+  {name:"goal",weight:.18,thrust:0,yaw:0,joints:{}},
+  {name:"style",weight:.10,thrust:0,yaw:0,joints:{}}
+];
+let activeStreams=0,requestBusy=false,aborter=null;
 
-/* ---------- app state ---------- */
-const state = {
-  provider:"openrouter",
-  model:"",
-  apiKey:"",
-  endpoint:"https://api.openai.com/v1",
-  customModel:"",
-  goal:"walk",
-  learning:false,
-  requestInFlight:false,
-  abortController:null,
-  step:0,
-  target:new THREE.Vector3(0,0,-4),
-  previousRoot:new THREE.Vector3(0,1.4,0),
-  realism:true,
-  autoCamera:false,
-  history:[],
-  historyIndex:-1
-};
+const COLORS={body:0x3f7695,limb:0x58bdd3,head:0x6577b4,eye:0xeaffff};
 
-let scene,camera,renderer,controls,clock,raycaster,pointer;
-let character,torso,head,leftArm,rightArm,leftLeg,rightLeg,targetGroup,floor,grid;
-let lastFrame=performance.now(),frames=0,lastFpsUpdate=performance.now();
-let targetPose = {head:{x:0,y:0,z:0},leftArm:{x:0,y:0,z:0},rightArm:{x:0,y:0,z:0},leftLeg:{x:0,y:0,z:0},rightLeg:{x:0,y:0,z:0},torso:{x:0,z:0},rotY:0};
-let currentPose = JSON.parse(JSON.stringify(targetPose));
-
-const $ = id => document.getElementById(id);
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const rad=v=>THREE.MathUtils.degToRad(v);
-const now=()=>new Date().toLocaleTimeString([], {hour12:false});
-
-/* ---------- UI ---------- */
 function log(msg,type=""){
-  const box=$("log");
-  const line=document.createElement("div");
-  line.className="line";
-  const t=document.createElement("span"); t.className="time"; t.textContent=`[${now()}] `;
-  const m=document.createElement("span"); if(type)m.className=type; m.textContent=msg;
-  line.append(t,m); box.prepend(line);
-  while(box.children.length>80) box.lastChild.remove();
+ const d=document.createElement("div"),t=document.createElement("span");
+ t.className="time";t.textContent="["+new Date().toLocaleTimeString([], {hour12:false})+"] ";
+ d.append(t,document.createTextNode(msg));if(type)d.classList.add(type);
+ $("log").prepend(d);while($("log").children.length>80)$("log").lastChild.remove();
 }
-function toast(msg){
-  const t=$("toast");t.textContent=msg;t.classList.add("show");
-  clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),1700);
-}
-function setStatus(text,active=false){
-  $("statusText").textContent=text.toUpperCase();
-  $("statusDot").classList.toggle("active",active);
-  $("simState").textContent=active?"RUNNING":"IDLE";
-}
-function populateProviders(){
-  $("provider").innerHTML=Object.entries(PROVIDERS).map(([id,p])=>`<option value="${id}">${p.name}</option>`).join("");
-  $("provider").value=state.provider;
-  populateModels();
-}
-function populateModels(){
-  const p=PROVIDERS[$("provider").value];
-  $("model").innerHTML=p.models.map(([id,n])=>`<option value="${id}">${n}</option>`).join("");
-  $("model").value=state.model && p.models.some(x=>x[0]===state.model)?state.model:p.models[0][0];
-  const custom=$("provider").value==="custom";
-  $("endpointField").classList.toggle("hidden",!custom);
-  $("customModelField").classList.toggle("hidden",!custom);
-  $("keyField").classList.toggle("hidden",false);
-}
+function status(s,on=false){$("status").textContent=s.toUpperCase();$("dot").classList.toggle("on",on)}
 function save(){
-  state.provider=$("provider").value;
-  state.model=$("model").value;
-  state.apiKey=$("apiKey").value;
-  state.endpoint=$("endpoint").value.trim() || "https://api.openai.com/v1";
-  state.customModel=$("customModel").value.trim();
-  state.goal=$("goal").value;
-  localStorage.setItem(STORAGE_KEY,JSON.stringify({
-    provider:state.provider,model:state.model,apiKey:state.apiKey,endpoint:state.endpoint,
-    customModel:state.customModel,goal:state.goal,realism:state.realism,autoCamera:state.autoCamera
-  }));
+ cfg.provider=$("provider").value;cfg.model=$("model").value.trim();cfg.key=$("key").value;
+ cfg.endpoint=$("endpoint").value.trim()||"https://api.openai.com/v1";cfg.goal=$("goal").value;
+ localStorage.setItem(STORAGE,JSON.stringify(cfg));
 }
 function load(){
-  try{
-    const d=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
-    if(d){
-      Object.assign(state,d);
-      $("provider").value=state.provider;
-      populateModels();
-      $("model").value=state.model||$("model").value;
-      $("apiKey").value=state.apiKey||"";
-      $("endpoint").value=state.endpoint||"https://api.openai.com/v1";
-      $("customModel").value=state.customModel||"";
-      $("goal").value=state.goal||"walk";
-      $("realismSwitch").classList.toggle("on",state.realism);
-      $("autoCameraSwitch").classList.toggle("on",state.autoCamera);
-    }
-  }catch(e){log("Settings reset because stored data was invalid.","warn")}
+ try{Object.assign(cfg,JSON.parse(localStorage.getItem(STORAGE)||"{}"))}catch{}
+ $("provider").value=cfg.provider;$("model").value=cfg.model||"openai/gpt-oss-120b";$("key").value=cfg.key||"";
+ $("endpoint").value=cfg.endpoint||"https://api.openai.com/v1";$("goal").value=cfg.goal||"reach";
+ $("endpointWrap").classList.toggle("hidden",cfg.provider!=="custom");
 }
-function toggleSwitch(el,key){
-  state[key]=!state[key];el.classList.toggle("on",state[key]);save();
+$("provider").onchange=()=>{$("endpointWrap").classList.toggle("hidden",$("provider").value!=="custom");save()};
+["model","key","endpoint","goal"].forEach(id=>$(id).onchange=save);
+
+function material(c,r=.42,m=.15){return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m,emissive:c,emissiveIntensity:.035})}
+function box(w,h,d,mat){let g=new THREE.BoxGeometry(w,h,d);let m=new THREE.Mesh(g,mat);m.castShadow=true;m.receiveShadow=true;return m}
+
+function init(){
+ scene=new THREE.Scene();scene.background=new THREE.Color(0x05070a);scene.fog=new THREE.FogExp2(0x05070a,.024);
+ camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.05,150);camera.position.set(0,3.3,6.6);
+ renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
+ renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+ renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputEncoding=THREE.sRGBEncoding;
+ $("stage").appendChild(renderer.domElement);
+
+ /* Important camera fix: controls are attached directly to the full-screen
+    canvas, while the HTML panels never sit over the viewport element. */
+ controls=new THREE.OrbitControls(camera,renderer.domElement);
+ controls.enableDamping=true;controls.dampingFactor=.065;controls.enablePan=true;
+ controls.screenSpacePanning=true;controls.rotateSpeed=.72;controls.panSpeed=.8;controls.zoomSpeed=.9;
+ controls.minDistance=1.8;controls.maxDistance=18;controls.maxPolarAngle=Math.PI*.49;controls.target.set(0,1.15,0);
+
+ scene.add(new THREE.HemisphereLight(0xdaf6ff,0x06080c,.78));
+ let key=new THREE.DirectionalLight(0xcaf5ff,1.35);key.position.set(5,10,6);key.castShadow=true;key.shadow.mapSize.set(1024,1024);scene.add(key);
+ let rim=new THREE.PointLight(0x5ad7ff,1.1,13);rim.position.set(-4,4,-5);scene.add(rim);
+ let fill=new THREE.PointLight(0x718cff,.32,9);fill.position.set(5,2,3);scene.add(fill);
+
+ floor=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshStandardMaterial({color:0x080b10,roughness:.88,metalness:.05}));
+ floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+ grid=new THREE.GridHelper(32,32,0x355361,0x17232b);grid.position.y=.004;scene.add(grid);
+
+ createTarget();createRagdoll();
+ raycaster=new THREE.Raycaster();pointer=new THREE.Vector2();
+ renderer.domElement.addEventListener("pointerdown",placeTarget);
+ addEventListener("resize",resize);addEventListener("keydown",keys);
+ clock=new THREE.Clock();animate();snapshot(true);
+ log("Physics engine initialized.","ok");log("Ragdoll is simulated — AI writes motor intent, not teleportation.","ok");
 }
-$("provider").addEventListener("change",()=>{populateModels();save()});
-["model","apiKey","endpoint","customModel","goal"].forEach(id=>$(id).addEventListener("change",save));
-$("realismSwitch").onclick=()=>toggleSwitch($("realismSwitch"),"realism");
-$("autoCameraSwitch").onclick=()=>toggleSwitch($("autoCameraSwitch"),"autoCamera");
 
-/* ---------- 3D scene ---------- */
-function init3D(){
-  clock=new THREE.Clock();
-  scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x06080c);
-  scene.fog=new THREE.FogExp2(0x06080c,.027);
-
-  camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.05,120);
-  camera.position.set(0,3.2,6.4);
-
-  renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
-  renderer.setSize(innerWidth,innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
-  renderer.shadowMap.enabled=true;
-  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  renderer.outputEncoding=THREE.sRGBEncoding;
-  $("stage").appendChild(renderer.domElement);
-
-  controls=new THREE.OrbitControls(camera,renderer.domElement);
-  controls.enableDamping=true;
-  controls.dampingFactor=.065;
-  controls.minDistance=2.2;
-  controls.maxDistance=16;
-  controls.maxPolarAngle=Math.PI*.49;
-  controls.target.set(0,1.1,0);
-
-  scene.add(new THREE.HemisphereLight(0xd9f5ff,0x07090d,.72));
-  const key=new THREE.DirectionalLight(0xc9f4ff,1.35);
-  key.position.set(5,9,6);key.castShadow=true;
-  key.shadow.mapSize.set(1024,1024);
-  key.shadow.camera.near=.5;key.shadow.camera.far=30;
-  key.shadow.camera.left=-10;key.shadow.camera.right=10;key.shadow.camera.top=10;key.shadow.camera.bottom=-10;
-  scene.add(key);
-
-  const rim=new THREE.PointLight(0x53cfff,1.15,12);rim.position.set(-4,4,-5);scene.add(rim);
-  const warm=new THREE.PointLight(0x5f8cff,.38,9);warm.position.set(5,2,2);scene.add(warm);
-
-  const floorMat=new THREE.MeshStandardMaterial({color:0x080b10,roughness:.82,metalness:.08});
-  floor=new THREE.Mesh(new THREE.PlaneGeometry(50,50),floorMat);
-  floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.userData.isFloor=true;scene.add(floor);
-
-  grid=new THREE.GridHelper(30,30,0x34515e,0x15212a);
-  grid.position.y=.006;scene.add(grid);
-
-  createTarget();
-  createCharacter();
-  raycaster=new THREE.Raycaster();pointer=new THREE.Vector2();
-
-  renderer.domElement.addEventListener("pointerdown",onViewportPointer,{passive:true});
-  addEventListener("resize",onResize);
-  animate();
-}
-function makePlasmaMaterial(color,rough=.3,metal=.18){
-  return new THREE.MeshStandardMaterial({
-    color,roughness:rough,metalness:metal,emissive:color,emissiveIntensity:.055
-  });
-}
-function createCharacter(){
-  character=new THREE.Group();character.position.set(0,1.4,0);
-  const torsoMat=makePlasmaMaterial(0x3b78a0,.29,.22);
-  const limbMat=makePlasmaMaterial(0x55bdd5,.34,.2);
-  const headMat=makePlasmaMaterial(0x6677b6,.3,.16);
-  const eyeMat=new THREE.MeshStandardMaterial({color:0xeaffff,emissive:0xbff6ff,emissiveIntensity:.7});
-
-  torso=new THREE.Mesh(new THREE.BoxGeometry(.82,1,.52),torsoMat);
-  torso.castShadow=true;character.add(torso);
-
-  head=new THREE.Mesh(new THREE.BoxGeometry(.61,.61,.61),headMat);
-  head.position.set(0,.8,0);head.castShadow=true;torso.add(head);
-
-  const eyeGeo=new THREE.BoxGeometry(.12,.12,.045);
-  [-.16,.16].forEach(x=>{const e=new THREE.Mesh(eyeGeo,eyeMat);e.position.set(x,.08,.315);head.add(e)});
-
-  leftArm=joint(-.56,.4,limbMat,.30,.8,.30);
-  rightArm=joint(.56,.4,limbMat,.30,.8,.30);
-  leftLeg=joint(-.25,-.5,limbMat,.32,.9,.32);
-  rightLeg=joint(.25,-.5,limbMat,.32,.9,.32);
-  scene.add(character);
-}
-function joint(x,y,mat,w,h,d){
-  const g=new THREE.Group();g.position.set(x,y,0);
-  const geo=new THREE.BoxGeometry(w,h,d);geo.translate(0,-h/2,0);
-  const m=new THREE.Mesh(geo,mat);m.castShadow=true;g.add(m);torso.add(g);return g;
-}
 function createTarget(){
-  targetGroup=new THREE.Group();
-  const baseMat=new THREE.MeshStandardMaterial({color:0xa8efff,emissive:0x63dfff,emissiveIntensity:.65,roughness:.25,metalness:.2});
-  const base=new THREE.Mesh(new THREE.CylinderGeometry(.31,.31,.08,24),baseMat);
-  base.position.y=.04;base.receiveShadow=true;targetGroup.add(base);
-  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.45,10),new THREE.MeshBasicMaterial({color:0xdafaff}));
-  pole.position.y=.76;targetGroup.add(pole);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.43,.018,8,32),new THREE.MeshBasicMaterial({color:0x7fe5ff,transparent:true,opacity:.72}));
-  ring.rotation.x=Math.PI/2;ring.position.y=.075;targetGroup.add(ring);
-  targetGroup.position.copy(state.target);scene.add(targetGroup);
+ targetMesh=new THREE.Group();
+ let base=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.08,24),new THREE.MeshStandardMaterial({color:0x9cefff,emissive:0x58d9ff,emissiveIntensity:.7,roughness:.25}));
+ base.position.y=.04;targetMesh.add(base);
+ let pole=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.4,10),new THREE.MeshBasicMaterial({color:0xdffaff}));pole.position.y=.74;targetMesh.add(pole);
+ let ring=new THREE.Mesh(new THREE.TorusGeometry(.43,.018,8,32),new THREE.MeshBasicMaterial({color:0x77e2ff,transparent:true,opacity:.72}));
+ ring.rotation.x=Math.PI/2;ring.position.y=.075;targetMesh.add(ring);targetMesh.position.copy(target);scene.add(targetMesh);
 }
-function setTarget(x,z,record=true){
-  state.target.set(x,0,z);targetGroup.position.set(x,0,z);
-  if(record) pushHistory();
-  updateUI();
+function createRagdoll(){
+ rig=new THREE.Group();rig.position.set(0,2.1,0);scene.add(rig);
+ const bm=material(COLORS.body,.35,.2),lm=material(COLORS.limb,.4,.16),hm=material(COLORS.head,.36,.15);
+ body=box(.82,1,.52,bm);rig.add(body);
+ head=box(.61,.61,.61,hm);head.position.y=.82;body.add(head);
+ let eyeMat=new THREE.MeshStandardMaterial({color:COLORS.eye,emissive:COLORS.eye,emissiveIntensity:.65});
+ [-.16,.16].forEach(x=>{let e=box(.12,.12,.045,eyeMat);e.position.set(x,.08,.315);head.add(e)});
+ la=makeLimb(-.57,.38,.3,.78,lm);ra=makeLimb(.57,.38,.3,.78,lm);
+ ll=makeLimb(-.25,-.52,.32,.9,lm);rl=makeLimb(.25,-.52,.32,.9,lm);
 }
-function onViewportPointer(e){
-  if(e.button!==undefined && e.button!==0)return;
-  const rect=renderer.domElement.getBoundingClientRect();
-  pointer.x=((e.clientX-rect.left)/rect.width)*2-1;
-  pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
-  raycaster.setFromCamera(pointer,camera);
-  const hits=raycaster.intersectObject(floor,false);
-  if(hits.length){const p=hits[0].point;setTarget(clamp(p.x,-15,15),clamp(p.z,-15,15),true);toast("Target repositioned")}
+function makeLimb(x,y,w,h,mat){
+ let j=new THREE.Group();j.position.set(x,y,0);let m=box(w,h,w,mat);m.position.y=-h/2;j.add(m);body.add(j);return j;
 }
-function onResize(){
-  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);
-}
-function applyPose(){
-  const p=targetPose;
-  leftLeg.rotation.set(p.leftLeg.x,p.leftLeg.y,p.leftLeg.z);
-  rightLeg.rotation.set(p.rightLeg.x,p.rightLeg.y,p.rightLeg.z);
-  leftArm.rotation.set(p.leftArm.x,p.leftArm.y,p.leftArm.z);
-  rightArm.rotation.set(p.rightArm.x,p.rightArm.y,p.rightArm.z);
-  head.rotation.set(p.head.x,p.head.y,p.head.z);
-  torso.rotation.set(p.torso.x,0,p.torso.z);
-  character.rotation.y=p.rotY;
-}
-function smoothPose(){
-  const speed=.11;
-  const lerpObj=(o,t)=>{o.x=THREE.MathUtils.lerp(o.x,t.x,speed);o.y=THREE.MathUtils.lerp(o.y,t.y,speed);o.z=THREE.MathUtils.lerp(o.z,t.z,speed)};
-  lerpObj(leftLeg.rotation,targetPose.leftLeg);lerpObj(rightLeg.rotation,targetPose.rightLeg);
-  lerpObj(leftArm.rotation,targetPose.leftArm);lerpObj(rightArm.rotation,targetPose.rightArm);
-  lerpObj(head.rotation,targetPose.head);
-  torso.rotation.x=THREE.MathUtils.lerp(torso.rotation.x,targetPose.torso.x,speed);
-  torso.rotation.z=THREE.MathUtils.lerp(torso.rotation.z,targetPose.torso.z,speed);
-  character.rotation.y=THREE.MathUtils.lerp(character.rotation.y,targetPose.rotY,speed);
-}
-function animate(){
-  requestAnimationFrame(animate);
-  const dt=Math.min(clock.getDelta(),.05);
-  smoothPose();
-  controls.update();
-  if(state.autoCamera){
-    const desired=new THREE.Vector3(character.position.x,2.7,character.position.z+5.7);
-    camera.position.lerp(desired,.012);controls.target.lerp(new THREE.Vector3(character.position.x,1.1,character.position.z),.012);
-  }
-  targetGroup.rotation.y+=dt*.25;
-  targetGroup.children[2].scale.setScalar(1+Math.sin(performance.now()*.004)*.025);
-  updateTelemetry(dt);
-  renderer.render(scene,camera);
 
-  frames++;
-  if(performance.now()-lastFpsUpdate>700){
-    const fps=Math.round(frames*1000/(performance.now()-lastFpsUpdate));
-    $("fpsChip").textContent=`${fps} FPS`;
-    frames=0;lastFpsUpdate=performance.now();
-  }
+/* --------- actual rigid-body-ish solver --------- */
+const physics={
+ mass:6, inertia:2.2, damping:.985, angularDamping:.96,
+ restitution:.08, friction:.82,
+ motor:{thrust:0,yaw:0,head:0,la:0,ra:0,ll:0,rl:0,tilt:0}
+};
+function physicsStep(dt){
+ if(!cfg.physics)return;
+ const toTarget=new THREE.Vector3(target.x-rig.position.x,0,target.z-rig.position.z);
+ const dist=toTarget.length();
+ let forward=new THREE.Vector3(0,0,-1).applyQuaternion(rig.quaternion);
+ let desiredYaw=Math.atan2(-toTarget.x,-toTarget.z);
+ let yawError=THREE.MathUtils.euclideanModulo(desiredYaw-rig.rotation.y+Math.PI,Math.PI*2)-Math.PI;
+ let intentThrust=0,intentYaw=0;
+ streamIntent.forEach(s=>{intentThrust+=s.weight*s.thrust;intentYaw+=s.weight*s.yaw});
+ if(cfg.goal==="reach"||cfg.goal==="walk"){
+   intentYaw+=clamp(yawError,-.65,.65)*.7;
+   intentThrust+=clamp(dist*.16,0,.95);
+ }
+ physics.motor.thrust=clamp(intentThrust,-1,1);physics.motor.yaw=clamp(intentYaw,-1,1);
+
+ let accel=forward.multiplyScalar(physics.motor.thrust*5.5);
+ accel.y=physics.gravity;
+ velocity.addScaledVector(accel,dt);
+ velocity.multiplyScalar(Math.pow(physics.damping,dt*60));
+ rig.position.addScaledVector(velocity,dt);
+
+ /* floor collision: center of the torso is kept above the body half-height */
+ if(rig.position.y<1.4){rig.position.y=1.4;if(velocity.y<0)velocity.y=-velocity.y*physics.restitution;velocity.x*=physics.friction;velocity.z*=physics.friction}
+ angularVelocity.y+=physics.motor.yaw*4.5*dt;
+ angularVelocity.multiplyScalar(Math.pow(physics.angularDamping,dt*60));
+ rig.rotation.y+=angularVelocity.y*dt;
+
+ /* Joint motors: spring-damper torques. Each stream contributes a target angle. */
+ const targets={head:0,la:0,ra:0,ll:0,rl:0,tilt:0};
+ streamIntent.forEach(s=>{for(const k in targets)targets[k]+=s.weight*(s.joints[k]||0)});
+ const motor=(obj,axis,target,kp=9,kd=.9)=>{
+   const err=target-obj.rotation[axis];
+   let av=axis==="x"?obj.userData.avx||0:obj.userData.avz||0;
+   const torque=clamp(err*kp-av*kd,-12,12);
+   av+=torque*dt/physics.inertia;obj.rotation[axis]+=av*dt;
+   if(axis==="x")obj.userData.avx=av;else obj.userData.avz=av;
+ };
+ motor(head,"x",targets.head,8,.75);motor(la,"x",targets.la,10,.8);motor(ra,"x",targets.ra,10,.8);
+ motor(ll,"x",targets.ll,12,.9);motor(rl,"x",targets.rl,12,.9);
+ motor(body,"z",targets.tilt,8,.8);
+ constrain(la,-1.45,1.45);constrain(ra,-1.45,1.45);constrain(ll,-1.3,1.3);constrain(rl,-1.3,1.3);constrain(head,-.8,.8);constrain(body,-.7,.7);
+}
+function constrain(o,min,max){o.rotation.x=clamp(o.rotation.x,min,max)}
+function animate(){
+ requestAnimationFrame(animate);let dt=Math.min(clock.getDelta(),.033);simTime+=dt;
+ physicsStep(dt);controls.update();
+ targetMesh.rotation.y+=dt*.35;targetMesh.children[2].scale.setScalar(1+Math.sin(simTime*4)*.025);
+ updateTelemetry(dt);renderer.render(scene,camera);
+ frames++;if(performance.now()-lastFPS>700){$("fps").textContent=Math.round(frames*1000/(performance.now()-lastFPS))+" FPS";frames=0;lastFPS=performance.now()}
 }
 function updateTelemetry(dt){
-  const dist=character.position.distanceTo(state.target);
-  const moved=character.position.distanceTo(state.previousRoot);
-  const speed=dt>0?moved/dt:0;
-  $("statSteps").textContent=state.step;
-  $("statDistance").textContent=dist.toFixed(2)+"m";
-  $("statReward").textContent=Math.max(0,(10-dist)*10).toFixed(1);
-  $("statSpeed").textContent=speed.toFixed(2);
-  $("tx").textContent=state.target.x.toFixed(2);$("tz").textContent=state.target.z.toFixed(2);
-  $("rx").textContent=character.position.x.toFixed(2);$("rz").textContent=character.position.z.toFixed(2);
-  $("targetChip").textContent=`TARGET · ${state.target.x.toFixed(2)} / ${state.target.z.toFixed(2)}`;
-  const d=THREE.MathUtils.radToDeg;
-  $("jointTelemetry").innerHTML=
-    `L-LEG <b>${d(leftLeg.rotation.x).toFixed(0)}°</b> · R-LEG <b>${d(rightLeg.rotation.x).toFixed(0)}°</b><br>`+
-    `L-ARM <b>${d(leftArm.rotation.x).toFixed(0)}°</b> · R-ARM <b>${d(rightArm.rotation.x).toFixed(0)}°</b><br>`+
-    `HEAD <b>${d(head.rotation.x).toFixed(0)}°</b> · ROOT <b>${d(character.rotation.y).toFixed(0)}°</b><br>`+
-    `TILT <b>${d(torso.rotation.z).toFixed(0)}°</b>`;
+ let d=rig.position.distanceTo(target),speed=velocity.length(),load=Math.round(clamp(Math.abs(physics.motor.thrust)+Math.abs(physics.motor.yaw),0,2)*50);
+ $("steps").textContent=controlTicks;$("distance").textContent=d.toFixed(2)+"m";$("reward").textContent=Math.max(0,(10-d)*10).toFixed(1);$("energy").textContent=load+"%";
+ const deg=THREE.MathUtils.radToDeg;
+ $("joints").innerHTML=`ROOT Y <b>${deg(rig.rotation.y).toFixed(0)}°</b><br>HEAD <b>${deg(head.rotation.x).toFixed(0)}°</b><br>L-ARM <b>${deg(la.rotation.x).toFixed(0)}°</b> · R-ARM <b>${deg(ra.rotation.x).toFixed(0)}°</b><br>L-LEG <b>${deg(ll.rotation.x).toFixed(0)}°</b> · R-LEG <b>${deg(rl.rotation.x).toFixed(0)}°</b><br>BODY TILT <b>${deg(body.rotation.z).toFixed(0)}°</b>`;
+ $("physics").innerHTML=`POSITION <b>${rig.position.x.toFixed(2)}, ${rig.position.y.toFixed(2)}, ${rig.position.z.toFixed(2)}</b><br>VELOCITY <b>${speed.toFixed(2)} m/s</b><br>GRAVITY <b>${cfg.gravity.toFixed(2)} m/s²</b><br>THRUST <b>${physics.motor.thrust.toFixed(2)}</b> · YAW <b>${physics.motor.yaw.toFixed(2)}</b>`;
+ $("target").textContent=`TARGET · ${target.x.toFixed(2)} / ${target.z.toFixed(2)}`;
 }
 
-/* ---------- undo / redo ---------- */
-function snapshot(){
-  return {
-    target:[state.target.x,state.target.z],
-    position:[character.position.x,character.position.z],
-    rotY:character.rotation.y,
-    pose:JSON.parse(JSON.stringify(targetPose))
-  };
+/* --------- multi-stream text encoder ---------
+   Every character maps to a deterministic control influence. The AI can
+   therefore generate a "motor language" instead of needing one action per
+   token. Several streams interpret the same sequence differently and their
+   weighted outputs are blended by the physics solver. */
+function encodeText(text){
+ const s=String(text||"").toLowerCase();let out=[];
+ const vals={thrust:0,yaw:0,head:0,la:0,ra:0,ll:0,rl:0,tilt:0};
+ for(let i=0;i<s.length;i++){
+   const c=s[i],n=c.charCodeAt(0),phase=i*.73;
+   if("wW".toLowerCase().includes(c))vals.thrust+=.8;
+   if(c==="s")vals.thrust-=.65;if(c==="a")vals.yaw+=.7;if(c==="d")vals.yaw-=.7;
+   if(c==="q")vals.yaw+=.35;if(c==="e")vals.yaw-=.35;
+   if(c==="j")vals.ll-=.65;if(c==="k")vals.rl-=.65;if(c==="u")vals.la-=.55;if(c==="i")vals.ra-=.55;
+   if(c==="o")vals.head+=.35;if(c==="p")vals.head-=.35;
+   if(c==="z")vals.tilt+=.35;if(c==="x")vals.tilt-=.35;
+   if(c===" ")vals.thrust+=.08;
+   if(/[0-9]/.test(c))vals.thrust+=(n-48)/90;
+   vals.la+=Math.sin(phase)*.025;vals.ra-=Math.sin(phase)*.025;
+ }
+ const count=Math.max(1,s.length);
+ Object.keys(vals).forEach(k=>vals[k]/=Math.sqrt(count));
+ return vals;
 }
-function restore(s){
-  state.target.set(s.target[0],0,s.target[1]);targetGroup.position.copy(state.target);
-  character.position.set(s.position[0],1.4,s.position[1]);
-  targetPose=JSON.parse(JSON.stringify(s.pose));applyPose();updateUI();
+function directCommand(text){
+ const t=String(text||"").toLowerCase();let e=encodeText(t);
+ const aliases=[
+  [/\bforward|ahead|go\b/,()=>e.thrust+=.75],[/\bback|backward\b/,()=>e.thrust-=.65],
+  [/\bleft\b/,()=>e.yaw+=.75],[/\bright\b/,()=>e.yaw-=.75],
+  [/\bjump\b/,()=>{e.ll=-.7;e.rl=-.7;e.thrust=.6}],
+  [/\bcrouch\b/,()=>{e.ll=.65;e.rl=.65}],
+  [/\bwave\b/,()=>{e.la=-.9;e.ra=-.9}],
+  [/\bstop|still\b/,()=>{e.thrust=0;e.yaw=0}]
+ ];aliases.forEach(([r,f])=>{if(r.test(t))f()});return e;
 }
-function pushHistory(){
-  if(!character||!targetGroup)return;
-  const s=snapshot();
-  if(state.historyIndex>=0 && JSON.stringify(state.history[state.historyIndex])===JSON.stringify(s))return;
-  state.history=state.history.slice(0,state.historyIndex+1);state.history.push(s);
-  if(state.history.length>60)state.history.shift();
-  state.historyIndex=state.history.length-1;updateHistoryButtons();
+function distribute(base){
+ activeStreams=cfg.multi?5:1;
+ const names=["locomotion","balance","upper-body","goal","style"];
+ for(let i=0;i<5;i++){
+   const s=streamIntent[i];s.weight=cfg.multi?[.34,.22,.16,.18,.10][i]:i===0?1:0;s.thrust=base.thrust;s.yaw=base.yaw;
+   s.joints={head:base.head,la:base.la,ra:base.ra,ll:base.ll,rl:base.rl,tilt:base.tilt};
+ }
+ $("streamCount").textContent=activeStreams+" / 5";
+ $("encoder").textContent=`Encoded ${String($("command").value||"").length} characters → ${activeStreams} control streams.\nW/A/S/D = locomotion · Q/E = yaw trim · U/I = arms · J/K = legs · O/P = head · Z/X = body tilt`;
 }
-function undo(){
-  if(state.historyIndex<=0)return;
-  state.historyIndex--;restore(state.history[state.historyIndex]);toast("Undo");updateHistoryButtons();
+async function runCommand(){
+ const text=$("command").value.trim();if(!text){toast("Enter a command first");return}
+ distribute(directCommand(text));controlTicks++;log(`TEXT → ${activeStreams} streams: "${text}"`,"ok");
 }
-function redo(){
-  if(state.historyIndex>=state.history.length-1)return;
-  state.historyIndex++;restore(state.history[state.historyIndex]);toast("Redo");updateHistoryButtons();
-}
-function updateHistoryButtons(){
-  $("undoBtn").style.opacity=state.historyIndex>0?"1":".35";
-  $("redoBtn").style.opacity=state.historyIndex<state.history.length-1?"1":".35";
-}
-$("undoBtn").onclick=undo;$("redoBtn").onclick=redo;
+$("run").onclick=async()=>{if(cfg.mode==="text"){runCommand();return}await aiStep()};
+$("step").onclick=()=>aiStep();
+document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));b.classList.add("active");cfg.mode=b.dataset.mode});
+function toast(t){$("encoder").textContent=t}
 
-/* ---------- AI ---------- */
-function buildPrompt(){
-  const dx=state.target.x-character.position.x, dz=state.target.z-character.position.z;
-  return `You control a simple six-block 3D character.
-Objective: ${$("goal").value}.
-Target offset: dx=${dx.toFixed(3)}, dz=${dz.toFixed(3)}.
-Distance: ${character.position.distanceTo(state.target).toFixed(3)}m.
-Current yaw: ${character.rotation.y.toFixed(3)} radians.
+/* --------- AI controller --------- */
+function aiPrompt(){
+ const dx=target.x-rig.position.x,dz=target.z-rig.position.z;
+ return `You are the motor-control supervisor of a physics-based six-part ragdoll.
+The browser runs a real-time physics solver. You MUST NOT teleport the body.
+Your job is to issue motor intentions that the solver converts into forces/torques.
 
-Return ONLY one JSON object. No markdown.
-Schema:
-{"thought":"brief control explanation","stepDistance":0.0,"rotYOffset":0.0,
-"torsoTilt":{"x":0,"z":0},
-"leftLeg":{"x":0,"y":0,"z":0},"rightLeg":{"x":0,"y":0,"z":0},
-"leftArm":{"x":0,"y":0,"z":0},"rightArm":{"x":0,"y":0,"z":0},
-"head":{"x":0,"y":0,"z":0}}
-Constraints: joint values -1.2..1.2 radians; stepDistance 0..0.5; rotYOffset -0.5..0.5.`;
+WORLD:
+target offset dx=${dx.toFixed(2)}, dz=${dz.toFixed(2)}, distance=${rig.position.distanceTo(target).toFixed(2)}m.
+root position=${rig.position.x.toFixed(2)},${rig.position.y.toFixed(2)},${rig.position.z.toFixed(2)}
+root yaw=${rig.rotation.y.toFixed(2)}, velocity=${velocity.length().toFixed(2)}m/s.
+objective=${$("goal").value}.
+The user may also provide a direct text command: ${JSON.stringify($("command").value)}.
+
+CONTROL LANGUAGE:
+The final "text" field is a compact motor-language string.
+w=forward, s=backward, a=left, d=right, q/e=yaw trim,
+u/i=left/right arm, j/k=left/right leg, o/p=head, z/x=body tilt.
+Repeated characters increase influence; spaces add small forward bias.
+You may use punctuation and numbers as additional timing/noise characters.
+Generate multiple streams by giving distinct strings for each stream.
+
+Return ONLY JSON:
+{
+ "streams":[
+   {"name":"locomotion","weight":0.34,"text":"wwa"},
+   {"name":"balance","weight":0.22,"text":"zz"},
+   {"name":"upper-body","weight":0.16,"text":"ui"},
+   {"name":"goal","weight":0.18,"text":"ww"},
+   {"name":"style","weight":0.10,"text":""}
+ ],
+ "confidence":0.0,
+ "reason":"brief explanation"
 }
-async function requestAI(){
-  if(state.requestInFlight){toast("AI request already running");return}
-  state.requestInFlight=true;$("stepBtn").disabled=true;setStatus("AI THINKING",true);
-  state.abortController=new AbortController();
-  try{
-    const raw=await fetchCompletion(buildPrompt(),state.abortController.signal);
-    const action=parseAction(raw);
-    applyAction(action);
-    state.step++;
-    log(`Step ${state.step}: ${action.thought||"Motor policy updated."}`,"ok");
-    setStatus(state.learning?"LEARNING":"SYSTEM READY",state.learning);
-  }catch(err){
-    if(err.name!=="AbortError"){log(`AI error: ${err.message}`,"err");setStatus("AI ERROR",false)}
-  }finally{
-    state.requestInFlight=false;$("stepBtn").disabled=false;state.abortController=null;
-  }
+RULES:
+- weights must sum to 1.
+- strings should normally be 0–32 characters.
+- prioritize physical stability over speed.
+- do not use impossible joint commands.
+- use several streams for simultaneous movement.
+- output no Markdown and no extra text.`;
 }
-async function fetchCompletion(prompt,signal){
-  const provider=$("provider").value,key=$("apiKey").value.trim();
-  if(!key){throw new Error("API key is missing. Add one in Control.");}
-  let url=PROVIDERS[provider].url;
-  if(provider==="custom"){
-    const base=($("endpoint").value.trim()||"https://api.openai.com/v1").replace(/\/+$/,"");
-    url=base+"/chat/completions";
-  }
-  const model=provider==="custom"?($("customModel").value.trim()||"custom"):$("model").value;
-  const headers={"Content-Type":"application/json","Authorization":`Bearer ${key}`};
-  if(provider==="openrouter"){
-    headers["HTTP-Referer"]=location.href;
-    headers["X-Title"]="Square Dude AI";
-  }
-  const body={
-    model,
-    messages:[
-      {role:"system",content:"You are a deterministic kinematic controller. Follow the JSON schema exactly."},
-      {role:"user",content:prompt}
-    ],
-    temperature:.2
-  };
-  const res=await fetch(url,{method:"POST",headers,body:JSON.stringify(body),signal});
-  const text=await res.text();
-  if(!res.ok)throw new Error(`HTTP ${res.status}: ${text.slice(0,180)}`);
-  let data;try{data=JSON.parse(text)}catch{throw new Error("Provider returned invalid JSON.")}
-  const content=data?.choices?.[0]?.message?.content;
-  if(typeof content!=="string"||!content.trim())throw new Error("Provider returned no message content.");
-  return content;
+async function aiStep(){
+ if(requestBusy){log("AI request already active; ignored overlapping request.","bad");return}
+ const key=$("key").value.trim();if(!key){log("API key is required for AI mode.","bad");status("API KEY MISSING");return}
+ requestBusy=true;aborter=new AbortController();$("step").disabled=true;$("run").disabled=true;status("AI THINKING",true);
+ try{
+  const raw=await fetchAI(aiPrompt(),aborter.signal);const parsed=parseAI(raw);
+  applyStreams(parsed.streams);controlTicks++;log(`AI: ${parsed.reason||"multi-stream motor policy applied."}`,"ok");
+  $("encoder").textContent=`AI confidence ${(Number(parsed.confidence)||0).toFixed(2)} · ${parsed.streams.length} streams active`;
+  status("MOTOR CONTROL ACTIVE",true);
+ }catch(e){if(e.name!=="AbortError")log("AI error: "+e.message,"bad");status("AI ERROR")}
+ finally{requestBusy=false;$("step").disabled=false;$("run").disabled=false;aborter=null}
 }
-function parseAction(raw){
-  let s=raw.trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
-  const start=s.indexOf("{"),end=s.lastIndexOf("}");
-  if(start>=0&&end>start)s=s.slice(start,end+1);
-  const a=JSON.parse(s);
-  const vec=(v,keys=["x","y","z"])=>Object.fromEntries(keys.map(k=>[k,clamp(Number(v?.[k])||0,-1.2,1.2)]));
-  return {
-    thought:String(a.thought||""),
-    stepDistance:clamp(Number(a.stepDistance)||0,0,.5),
-    rotYOffset:clamp(Number(a.rotYOffset)||0,-.5,.5),
-    torsoTilt:{x:clamp(Number(a.torsoTilt?.x)||0,-1.2,1.2),z:clamp(Number(a.torsoTilt?.z)||0,-1.2,1.2)},
-    leftLeg:vec(a.leftLeg),rightLeg:vec(a.rightLeg),leftArm:vec(a.leftArm),rightArm:vec(a.rightArm),head:vec(a.head)
-  };
+async function fetchAI(prompt,signal){
+ const p=$("provider").value,key=$("key").value.trim(),model=$("model").value.trim();
+ let url=p==="custom"?($("endpoint").value.trim().replace(/\/+$/,"")+"/chat/completions"):
+   p==="groq"?"https://api.groq.com/openai/v1/chat/completions":
+   p==="gemini"?"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions":
+   "https://openrouter.ai/api/v1/chat/completions";
+ const headers={"Content-Type":"application/json","Authorization":"Bearer "+key};
+ if(p==="openrouter"){headers["HTTP-Referer"]=location.href;headers["X-Title"]="Square Dude AI"}
+ const res=await fetch(url,{method:"POST",headers,signal,body:JSON.stringify({model:model||"openai/gpt-oss-120b",messages:[{role:"system",content:"Return strict JSON only."},{role:"user",content:prompt}],temperature:.15})});
+ const txt=await res.text();if(!res.ok)throw new Error("HTTP "+res.status+" "+txt.slice(0,160));
+ let data;try{data=JSON.parse(txt)}catch{throw new Error("Provider returned invalid JSON")}
+ const c=data?.choices?.[0]?.message?.content;if(!c)throw new Error("No model content returned");return c;
 }
-function applyAction(a){
-  const yaw=character.rotation.y+a.rotYOffset;
-  targetPose={
-    head:a.head,leftArm:a.leftArm,rightArm:a.rightArm,leftLeg:a.leftLeg,rightLeg:a.rightLeg,
-    torso:a.torsoTilt,rotY:yaw
-  };
-  state.previousRoot.copy(character.position);
-  const forward=new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
-  character.position.addScaledVector(forward,a.stepDistance);
-  character.position.x=clamp(character.position.x,-20,20);
-  character.position.z=clamp(character.position.z,-20,20);
-  pushHistory();
+function parseAI(raw){
+ let s=raw.trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();let a;
+ try{a=JSON.parse(s)}catch{let i=s.indexOf("{"),j=s.lastIndexOf("}");if(i<0||j<i)throw new Error("No JSON object found");a=JSON.parse(s.slice(i,j+1))}
+ if(!Array.isArray(a.streams))throw new Error("Missing streams array");
+ let streams=a.streams.slice(0,5).map((x,i)=>({name:String(x.name||"stream-"+i),weight:clamp(Number(x.weight)||0,0,1),text:String(x.text||"").slice(0,32)}));
+ let sum=streams.reduce((n,x)=>n+x.weight,0)||1;streams.forEach(x=>x.weight/=sum);return {streams,confidence:clamp(Number(a.confidence)||0,0,1),reason:String(a.reason||"")};
 }
-async function startLearning(){
-  if(state.learning){stopLearning();return}
-  state.learning=true;$("learnBtn").textContent="Ⅱ Pause learning";setStatus("LEARNING",true);
-  log("Continuous learning started.","ok");
-  while(state.learning){
-    await requestAI();
-    if(!state.learning)break;
-    await new Promise(r=>setTimeout(r,700));
-  }
+function applyStreams(streams){
+ streamIntent.forEach((s,i)=>{const x=streams[i];if(!x){s.weight=0;s.thrust=0;s.yaw=0;s.joints={};return}let e=directCommand(x.text);s.weight=x.weight;s.thrust=e.thrust;s.yaw=e.yaw;s.joints={head:e.head,la:e.la,ra:e.ra,ll:e.ll,rl:e.rl,tilt:e.tilt}});
+ activeStreams=streams.length;$("streamCount").textContent=activeStreams+" / 5";
 }
-function stopLearning(){
-  state.learning=false;
-  if(state.abortController)state.abortController.abort();
-  $("learnBtn").textContent="▶ Start learning";setStatus("SYSTEM READY",false);
-  log("Continuous learning paused.");
+
+/* --------- target + camera + history --------- */
+function placeTarget(e){
+ if(e.target!==renderer.domElement)return;
+ const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;
+ raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObject(floor,false)[0];
+ if(hit){target.set(clamp(hit.point.x,-20,20),0,clamp(hit.point.z,-20,20));targetMesh.position.copy(target);snapshot()}
 }
-$("learnBtn").onclick=startLearning;
-$("stepBtn").onclick=()=>{if(state.learning)stopLearning();requestAI()};
-$("resetBtn").onclick=()=>{
-  stopLearning();character.position.set(0,1.4,0);character.rotation.set(0,0,0);
-  targetPose={head:{x:0,y:0,z:0},leftArm:{x:0,y:0,z:0},rightArm:{x:0,y:0,z:0},leftLeg:{x:0,y:0,z:0},rightLeg:{x:0,y:0,z:0},torso:{x:0,z:0},rotY:0};
-  applyPose();state.step=0;setTarget(0,-4,false);pushHistory();log("Simulation reset.","ok");toast("Simulation reset");
+function snapshot(initial=false){
+ const s={target:[target.x,target.z],pos:[rig.position.x,rig.position.y,rig.position.z],rot:rig.rotation.y,vel:[velocity.x,velocity.y,velocity.z],
+ pose:[head.rotation.x,la.rotation.x,ra.rotation.x,ll.rotation.x,rl.rotation.x,body.rotation.z]};
+ if(!initial&&histIndex>=0&&JSON.stringify(history[histIndex])===JSON.stringify(s))return;
+ history=history.slice(0,histIndex+1);history.push(s);if(history.length>80)history.shift();histIndex=history.length-1;buttons();
+}
+function restore(s){target.set(s.target[0],0,s.target[1]);targetMesh.position.copy(target);rig.position.fromArray(s.pos);rig.rotation.y=s.rot;velocity.fromArray(s.vel);[head.rotation.x,la.rotation.x,ra.rotation.x,ll.rotation.x,rl.rotation.x,body.rotation.z]=s.pose}
+function undo(){if(histIndex>0){histIndex--;restore(history[histIndex]);buttons();log("Undo applied.","ok")}}
+function redo(){if(histIndex<history.length-1){histIndex++;restore(history[histIndex]);buttons();log("Redo applied.","ok")}}
+function buttons(){$("undo").style.opacity=histIndex>0?1:.35;$("redo").style.opacity=histIndex<history.length-1?1:.35}
+$("undo").onclick=undo;$("redo").onclick=redo;
+function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}
+function keys(e){if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="z"){e.preventDefault();e.shiftKey?redo():undo()}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="y"){e.preventDefault();redo()}}
+
+$("physicsSwitch").onclick=()=>{$("physicsSwitch").classList.toggle("on");cfg.physics=$("physicsSwitch").classList.contains("on")};
+$("streamSwitch").onclick=()=>{$("streamSwitch").classList.toggle("on");cfg.multi=$("streamSwitch").classList.contains("on")};
+
+$("settings").onclick=()=>$("modal").classList.add("open");$("close").onclick=()=>$("modal").classList.remove("open");$("modal").onclick=e=>{if(e.target===$("modal"))$("modal").classList.remove("open")};
+$("apply").onclick=()=>{renderer.setPixelRatio(Math.min(devicePixelRatio*Number($("scale").value),2));camera.fov=clamp(Number($("fov").value)||50,35,75);camera.updateProjectionMatrix();cfg.gravity=Number($("gravity").value)||-9.81;const g=$("grid").value;grid.visible=g!=="off";grid.material.opacity=g==="minimal"?.3:1;grid.material.transparent=g==="minimal";$("modal").classList.remove("open");log("Engine settings applied.","ok")};
+
+$("reset").onclick=()=>{
+ if(aborter)aborter.abort();requestBusy=false;status("SYSTEM READY");rig.position.set(0,2.1,0);rig.rotation.set(0,0,0);velocity.set(0,0,0);angularVelocity.set(0,0,0);
+ [head,la,ra,ll,rl,body].forEach(x=>x.rotation.set(0,0,0));target.set(0,0,-4);targetMesh.position.copy(target);controlTicks=0;streamIntent.forEach(s=>{s.thrust=0;s.yaw=0;s.joints={}});snapshot(true);log("Ragdoll reset to stable rest state.","ok");
 };
 
-/* ---------- visual settings ---------- */
-$("settingsBtn").onclick=()=>$("modalBackdrop").classList.add("open");
-$("closeSettings").onclick=()=>$("modalBackdrop").classList.remove("open");
-$("modalBackdrop").onclick=e=>{if(e.target===$("modalBackdrop"))$("modalBackdrop").classList.remove("open")};
-$("applySettings").onclick=()=>{
-  const scale=Number($("renderScale").value);
-  renderer.setPixelRatio(Math.min(devicePixelRatio*scale,2));
-  camera.fov=clamp(Number($("fov").value)||50,35,75);camera.updateProjectionMatrix();
-  const gm=$("gridMode").value;grid.visible=gm!=="off";grid.material.opacity=gm==="minimal"?.35:1;grid.material.transparent=gm==="minimal";
-  const sm=$("shadowMode").value;renderer.shadowMap.enabled=true;
-  toast("Visual settings applied");$("modalBackdrop").classList.remove("open");
-};
-addEventListener("keydown",e=>{
-  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="z"){e.preventDefault();e.shiftKey?redo():undo()}
-  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="y"){e.preventDefault();redo()}
-  if(e.code==="Space"&&document.activeElement.tagName!=="INPUT"&&document.activeElement.tagName!=="SELECT"){e.preventDefault();state.learning?stopLearning():startLearning()}
-});
-
-/* ---------- startup ---------- */
-populateProviders();
-load();
-init3D();
-pushHistory();
-log("System initialized. Viewport ready.","ok");
-log("Click the floor to place a new target.");
-log("AI control is idle. Configure a provider to begin.");
-updateHistoryButtons();
-updateTelemetry(0.016);
+load();init();
   </script>
 </body>
 
