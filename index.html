@@ -1,1015 +1,1369 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>3D AI Square Dude - LLM Kinematic Learner</title>
-  <!-- Three.js & OrbitControls -->
+    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#07090d">
+  <title>Square Dude AI — Kinematic Lab</title>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg-color: #0b0f19;
-      --panel-bg: rgba(18, 24, 38, 0.75);
-      --panel-border: rgba(255, 255, 255, 0.12);
-      --accent-cyan: #00f2fe;
-      --accent-blue: #4facfe;
-      --accent-green: #00e676;
-      --text-main: #f0f4f8;
-      --text-muted: #8e9bb0;
-      --radius-lg: 16px;
-      --radius-md: 10px;
+      --bg: #06080c;
+      --surface: rgba(19, 23, 30, .74);
+      --surface-strong: rgba(12, 16, 22, .91);
+      --surface-soft: rgba(255, 255, 255, .045);
+      --line: rgba(255, 255, 255, .105);
+      --line-bright: rgba(255, 255, 255, .18);
+      --text: #f2f5f7;
+      --muted: #89929e;
+      --dim: #5d6671;
+      --plasma: #b8f5ff;
+      --plasma-2: #6bd8ff;
+      --green: #9df2c1;
+      --red: #ff8e96;
+      --shadow: 0 18px 70px rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .055);
+      --r-xl: 20px;
+      --r-lg: 14px;
+      --r-md: 10px;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
+      -webkit-tap-highlight-color: transparent
     }
 
-    body,
-    html {
+    html,
+    body {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: var(--bg-color);
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-      color: var(--text-main);
+      background: var(--bg);
+      color: var(--text);
+      font: 13px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
     }
 
-    #canvas-container {
+    button,
+    input,
+    select {
+      font: inherit
+    }
+
+    button {
+      border: 0;
+      color: inherit
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+      z-index: 0
+    }
+
+    #stage canvas {
+      display: block;
       width: 100%;
       height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
+      touch-action: none
     }
 
-    /* Glassmorphic UI Overlay */
-    .glass {
-      background: var(--panel-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--panel-border);
-      border-radius: var(--radius-lg);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    #app {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none
     }
 
-    /* Top Header */
-    header {
+    .chrome {
+      pointer-events: auto
+    }
+
+    .plasma {
+      background:
+        radial-gradient(circle at 15% 0%, rgba(155, 238, 255, .12), transparent 36%),
+        radial-gradient(circle at 85% 100%, rgba(100, 210, 255, .055), transparent 42%),
+        linear-gradient(145deg, rgba(255, 255, 255, .072), rgba(255, 255, 255, .025) 48%, rgba(0, 0, 0, .18));
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px) saturate(145%);
+      -webkit-backdrop-filter: blur(22px) saturate(145%);
+    }
+
+    .plasma:before {
+      content: "";
       position: absolute;
-      top: 16px;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(120deg, rgba(255, 255, 255, .075), transparent 24%, transparent 74%, rgba(132, 225, 255, .045));
+      opacity: .8;
+    }
+
+    .topbar {
+      position: absolute;
       left: 16px;
       right: 16px;
-      z-index: 10;
+      top: 14px;
+      height: 58px;
+      border-radius: 18px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 12px 20px;
-      pointer-events: auto;
+      justify-content: space-between;
+      padding: 0 12px 0 16px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 11px
     }
 
-    .brand-logo {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-      border-radius: 8px;
+    .mark {
+      width: 31px;
+      height: 31px;
+      border: 1px solid rgba(190, 244, 255, .4);
+      border-radius: 9px;
       display: grid;
       place-items: center;
-      font-weight: 700;
-      color: #000;
+      position: relative;
+      background: rgba(175, 238, 255, .075);
+      box-shadow: inset 0 0 18px rgba(110, 220, 255, .08), 0 0 22px rgba(110, 220, 255, .06)
     }
 
-    .brand-title h1 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+    .mark i {
+      width: 11px;
+      height: 11px;
+      border: 1.5px solid var(--plasma);
+      display: block;
+      transform: rotate(45deg);
+      opacity: .9
     }
 
-    .brand-title p {
-      font-size: 0.75rem;
-      color: var(--text-muted);
+    .brand h1 {
+      font-size: 12px;
+      letter-spacing: .12em;
+      font-weight: 750
     }
 
-    .status-badge {
+    .brand p {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 1px;
+      letter-spacing: .04em
+    }
+
+    .top-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.8rem;
-      padding: 6px 12px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      gap: 7px
     }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--accent-cyan);
-      box-shadow: 0 0 10px var(--accent-cyan);
-    }
-
-    .status-dot.learning {
-      background-color: var(--accent-green);
-      box-shadow: 0 0 10px var(--accent-green);
-      animation: pulse 1s infinite alternate;
-    }
-
-    @keyframes pulse {
-      0% {
-        transform: scale(0.8);
-        opacity: 0.6;
-      }
-
-      100% {
-        transform: scale(1.2);
-        opacity: 1;
-      }
-    }
-
-    /* Main UI Container for iPad Layout */
-    .ui-layout {
-      position: absolute;
-      top: 80px;
-      bottom: 20px;
-      left: 16px;
-      right: 16px;
-      z-index: 10;
-      display: grid;
-      grid-template-columns: 320px 1fr 340px;
-      gap: 16px;
-      pointer-events: none;
-    }
-
-    @media (max-width: 900px) {
-      .ui-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr auto;
-        overflow-y: auto;
-        pointer-events: auto;
-      }
-    }
-
-    .panel {
-      pointer-events: auto;
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      gap: 14px;
-      overflow-y: auto;
-      max-height: 100%;
-    }
-
-    .panel-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--accent-cyan);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    select,
-    input {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--panel-border);
-      border-radius: var(--radius-md);
-      padding: 10px 12px;
-      color: var(--text-main);
-      font-family: inherit;
-      font-size: 0.85rem;
-      outline: none;
-      transition: all 0.2s ease;
-    }
-
-    select:focus,
-    input:focus {
-      border-color: var(--accent-cyan);
-      box-shadow: 0 0 8px rgba(0, 242, 254, 0.2);
-    }
-
-    .btn {
-      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-      border: none;
-      border-radius: var(--radius-md);
-      padding: 12px;
-      color: #000;
-      font-weight: 700;
-      font-size: 0.85rem;
-      cursor: pointer;
+    .icon-btn,
+    .status {
+      height: 34px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .035);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      transition: transform 0.1s ease, filter 0.2s ease;
-      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+    }
+
+    .icon-btn {
+      width: 36px;
+      cursor: pointer;
+      transition: .16s
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, .08);
+      border-color: var(--line-bright)
+    }
+
+    .icon-btn:active {
+      transform: scale(.96)
+    }
+
+    .status {
+      padding: 0 11px;
+      gap: 7px;
+      font-size: 10px;
+      color: #b9c1ca
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #9aa3ad;
+      box-shadow: 0 0 0 3px rgba(154, 163, 173, .08)
+    }
+
+    .dot.active {
+      background: var(--green);
+      box-shadow: 0 0 10px rgba(157, 242, 193, .7)
+    }
+
+    .layout {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 86px;
+      bottom: 16px;
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr) 320px;
+      gap: 12px;
+    }
+
+    .panel {
+      position: relative;
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0
+    }
+
+    .panel-inner {
+      position: relative;
+      z-index: 1;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+      height: 100%
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px
+    }
+
+    .kicker {
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: #c9d0d7
+    }
+
+    .sub {
+      font-size: 10px;
+      color: var(--dim)
+    }
+
+    .section {
+      border-top: 1px solid rgba(255, 255, 255, .065);
+      padding-top: 12px
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 9px
+    }
+
+    label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 650;
+      letter-spacing: .025em
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 34px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, .22);
+      color: var(--text);
+      padding: 0 10px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: rgba(184, 245, 255, .42);
+      box-shadow: 0 0 0 3px rgba(110, 220, 255, .07)
+    }
+
+    select option {
+      background: #11151b;
+      color: #fff
+    }
+
+    .row {
+      display: flex;
+      gap: 7px
+    }
+
+    .row>* {
+      flex: 1
+    }
+
+    .btn {
+      height: 35px;
+      border-radius: 9px;
+      padding: 0 11px;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .055);
+      font-weight: 650;
+      transition: .16s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, .09);
+      border-color: var(--line-bright)
     }
 
     .btn:active {
-      transform: scale(0.97);
+      transform: translateY(1px) scale(.99)
     }
 
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      box-shadow: none;
+    .btn.primary {
+      color: #061017;
+      border-color: rgba(194, 247, 255, .45);
+      background: linear-gradient(135deg, #d9fbff, #79dcff);
+      box-shadow: 0 7px 25px rgba(105, 214, 255, .16), inset 0 1px 0 rgba(255, 255, 255, .75);
     }
 
-    .btn-danger {
-      background: rgba(255, 75, 75, 0.2);
-      border: 1px solid rgba(255, 75, 75, 0.4);
-      color: #ff6b6b;
-      box-shadow: none;
+    .btn.danger {
+      color: #ffb0b5;
+      background: rgba(255, 100, 110, .055);
+      border-color: rgba(255, 120, 130, .18)
     }
 
-    .btn-group {
+    .btn.small {
+      height: 29px;
+      font-size: 10px;
+      padding: 0 9px
+    }
+
+    .hidden {
+      display: none !important
+    }
+
+    .viewport {
+      position: relative;
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      pointer-events: auto;
+      border: 1px solid rgba(255, 255, 255, .075);
+      background: rgba(5, 8, 12, .22);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 20px 80px rgba(0, 0, 0, .2)
+    }
+
+    .viewport:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, .25) 100%);
+    }
+
+    .viewport-top,
+    .viewport-bottom {
+      position: absolute;
+      left: 12px;
+      right: 12px;
       display: flex;
-      gap: 8px;
+      justify-content: space-between;
+      z-index: 4;
+      pointer-events: none
     }
 
-    .btn-group .btn {
-      flex: 1;
+    .viewport-top {
+      top: 12px
     }
 
-    /* AI Thought Stream Box */
-    .thought-box {
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      padding: 12px;
-      font-family: monospace;
-      font-size: 0.78rem;
-      line-height: 1.4;
-      color: #a0aec0;
-      flex-grow: 1;
-      min-height: 140px;
-      max-height: 220px;
-      overflow-y: auto;
+    .viewport-bottom {
+      bottom: 12px;
+      align-items: flex-end
+    }
+
+    .hud {
+      display: flex;
+      gap: 6px;
+      pointer-events: auto
+    }
+
+    .chip {
+      min-height: 29px;
+      padding: 0 9px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #aeb7c0;
+      font-size: 10px;
+      background: rgba(7, 10, 14, .48);
+      border: 1px solid rgba(255, 255, 255, .08);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px)
+    }
+
+    .chip strong {
+      color: #e8edf1;
+      font-weight: 700
+    }
+
+    .crosshair {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: 17px;
+      height: 17px;
+      transform: translate(-50%, -50%);
+      opacity: .3;
+      pointer-events: none
+    }
+
+    .crosshair:before,
+    .crosshair:after {
+      content: "";
+      position: absolute;
+      background: #d8f7ff
+    }
+
+    .crosshair:before {
+      width: 1px;
+      height: 100%;
+      left: 8px
+    }
+
+    .crosshair:after {
+      height: 1px;
+      width: 100%;
+      top: 8px
+    }
+
+    .scroll {
+      overflow: auto;
+      min-height: 0;
+      padding-right: 2px
+    }
+
+    .scroll::-webkit-scrollbar {
+      width: 5px
+    }
+
+    .scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .13);
+      border-radius: 10px
+    }
+
+    .log {
+      min-height: 145px;
+      max-height: 250px;
+      overflow: auto;
+      border-radius: 11px;
+      border: 1px solid rgba(255, 255, 255, .065);
+      background: rgba(0, 0, 0, .24);
+      padding: 10px;
+      font: 10px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #8f9aa5;
       white-space: pre-wrap;
-      word-break: break-word;
     }
 
-    .thought-box .thought-highlight {
-      color: var(--accent-cyan);
-      font-weight: bold;
+    .log::-webkit-scrollbar {
+      width: 4px
     }
 
-    /* Stats Grid */
-    .stats-grid {
+    .log::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .1)
+    }
+
+    .log .line {
+      margin-bottom: 8px
+    }
+
+    .log .time {
+      color: #4e5964
+    }
+
+    .log .ok {
+      color: #a9e9c5
+    }
+
+    .log .warn {
+      color: #ffd18a
+    }
+
+    .log .err {
+      color: #ff9ca3
+    }
+
+    .stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 7px
     }
 
-    .stat-card {
-      background: rgba(0, 0, 0, 0.25);
+    .stat {
       padding: 10px;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      text-align: center;
+      border: 1px solid rgba(255, 255, 255, .065);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .18)
     }
 
-    .stat-value {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent-cyan);
+    .stat b {
+      display: block;
+      font-size: 16px;
+      letter-spacing: -.02em
     }
 
-    .stat-label {
-      font-size: 0.7rem;
-      color: var(--text-muted);
+    .stat span {
+      font-size: 9px;
+      color: var(--dim);
       text-transform: uppercase;
+      letter-spacing: .08em
     }
 
-    /* Touch Hint Overlay */
-    .touch-hint {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(8px);
-      padding: 8px 16px;
+    .stat b.accent {
+      color: #c8f7ff
+    }
+
+    .telemetry {
+      border: 1px solid rgba(255, 255, 255, .065);
+      background: rgba(0, 0, 0, .18);
+      border-radius: 10px;
+      padding: 9px;
+      font: 10px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #87929d
+    }
+
+    .telemetry b {
+      color: #dbe2e7;
+      font-weight: 500
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(255, 255, 255, .065);
+      border-radius: 10px;
+      padding: 9px;
+      background: rgba(0, 0, 0, .15)
+    }
+
+    .switch {
+      width: 35px;
+      height: 19px;
       border-radius: 20px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      pointer-events: none;
-      z-index: 5;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #252c34;
+      border: 1px solid rgba(255, 255, 255, .1);
+      padding: 2px;
+      cursor: pointer
     }
 
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
+    .switch i {
+      display: block;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #87919b;
+      transition: .18s
     }
 
-    ::-webkit-scrollbar-track {
-      background: transparent;
+    .switch.on {
+      background: rgba(130, 220, 255, .18);
+      border-color: rgba(130, 220, 255, .3)
     }
 
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 3px;
+    .switch.on i {
+      transform: translateX(16px);
+      background: #c8f7ff;
+      box-shadow: 0 0 10px rgba(130, 220, 255, .5)
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 25px;
+      transform: translate(-50%, 10px);
+      opacity: 0;
+      z-index: 20;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: rgba(10, 13, 18, .86);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(15px);
+      font-size: 10px;
+      color: #dce3e8;
+      transition: .22s;
+      pointer-events: none
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0)
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      pointer-events: auto
+    }
+
+    .modal-backdrop.open {
+      display: flex
+    }
+
+    .modal {
+      position: relative;
+      width: min(520px, 100%);
+      max-height: min(700px, 90vh);
+      overflow: auto;
+      border-radius: 18px;
+      padding: 17px
+    }
+
+    .modal h2 {
+      font-size: 14px;
+      margin-bottom: 3px
+    }
+
+    .modal p {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 15px
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 7px;
+      margin-top: 15px
+    }
+
+    @media(max-width:1050px) {
+      .layout {
+        grid-template-columns: 260px minmax(0, 1fr) 275px
+      }
+    }
+
+    @media(max-width:850px) {
+      .topbar {
+        left: 10px;
+        right: 10px;
+        top: 9px
+      }
+
+      .layout {
+        left: 10px;
+        right: 10px;
+        top: 76px;
+        bottom: 10px;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(280px, 1fr) auto;
+        overflow: auto
+      }
+
+      .layout>.panel:first-child {
+        display: none
+      }
+
+      .viewport {
+        min-height: 0;
+        height: 100%
+      }
+
+      .layout>.panel:last-child {
+        max-height: 260px
+      }
+
+      .status {
+        display: none
+      }
+    }
+
+    @media(max-width:520px) {
+      .layout {
+        grid-template-rows: minmax(300px, 1fr) 245px
+      }
+
+      .brand p {
+        display: none
+      }
+
+      .top-actions .icon-btn:nth-child(1) {
+        display: none
+      }
     }
   </style>
 </head>
 
 <body>
+  <div id="stage"></div>
 
-  <div id="canvas-container"></div>
-
-  <header class="glass">
-    <div class="brand">
-      <div class="brand-logo">■</div>
-      <div class="brand-title">
-        <h1>SQUARE DUDE AI</h1>
-        <p>iPad Kinematic Learning Lab</p>
-      </div>
-    </div>
-    <div class="status-badge">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">System Ready</span>
-    </div>
-  </header>
-
-  <div class="ui-layout">
-    <!-- Left Panel: API & Settings -->
-    <div class="panel glass">
-      <div class="panel-title">
-        <span>🤖 AI Provider Config</span>
-      </div>
-
-      <div class="form-group">
-        <label for="providerSelect">Provider</label>
-        <select id="providerSelect" onchange="onProviderChange()">
-                    <option value="openrouter">OpenRouter (Recommended)</option>
-                    <option value="groq">Groq AI (Ultra Fast)</option>
-                    <option value="gemini">Google Gemini</option>
-                    <option value="custom">Custom OpenAI Endpoint</option>
-                </select>
-      </div>
-
-      <div class="form-group">
-        <label for="apiKeyInput">API Key</label>
-        <input type="password" id="apiKeyInput" placeholder="Enter API Key..." onchange="saveSettings()">
-      </div>
-
-      <div class="form-group">
-        <label for="modelSelect">Model Selection</label>
-        <select id="modelSelect" onchange="saveSettings()">
-                    <!-- Populated dynamically based on provider -->
-                </select>
-      </div>
-
-      <div class="form-group" id="customUrlGroup" style="display: none;">
-                <label for="customUrlInput">Endpoint Base URL</label>
-                <input type="text" id="customUrlInput" placeholder="https://api.openai.com/v1" onchange="saveSettings()">
-      </div>
-
-
-
-
-            <div class="form-group" id="customModelGroup" style="display: none;">
-                <label for="customModelInput">Custom Model Name / ID</label>
-                <input type="text" id="customModelInput" placeholder="e.g. gpt-4o, llama3:latest" onchange="saveSettings()">
-      </div>
-
-      <div class="form-group">
-        <label for="goalSelect">Learning Objective</label>
-        <select id="goalSelect">
-                    <option value="walk">Walk Towards Target Flag</option>
-                    <option value="dance">Perform Disco Dance Routine</option>
-                    <option value="wave">Wave both Arms & Balance</option>
-                    <option value="jump">Crouch & High Jump</option>
-                </select>
-      </div>
-
-      <div class="btn-group">
-        <button class="btn" id="trainBtn" onclick="toggleLearning()">▶ Start AI Learning</button>
-        <button class="btn btn-secondary" onclick="stepOnce()">Step 1x</button>
-      </div>
-
-      <button class="btn btn-danger" onclick="resetDude()">↺ Reset Dude Position</button>
-    </div>
-
-    <!-- Middle Spacer (allows 3D Canvas interaction) -->
-    <div></div>
-
-    <!-- Right Panel: Telemetry & Brain Thoughts -->
-    <div class="panel glass">
-      <div class="panel-title">
-        <span>🧠 AI Neural Thoughts</span>
-      </div>
-
-      <div class="thought-box" id="thoughtLog">
-        Waiting for AI continuous policy optimization loop...
-        Select provider + API key, then press "Start AI Learning".
-      </div>
-
-      <div class="panel-title" style="margin-top: 6px;">
-        <span>📊 Telemetry & Kinematics</span>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="statSteps">0</div>
-          <div class="stat-label">Episodes / Steps</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="statDistance">0.00m</div>
-          <div class="stat-label">Distance to Flag</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="statReward">0.00</div>
-          <div class="stat-label">Fitness Reward</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="statSpeed">0.0 km/h</div>
-          <div class="stat-label">Target Velocity</div>
+  <div id="app">
+    <header class="topbar plasma chrome">
+      <div class="brand">
+        <div class="mark"><i></i></div>
+        <div>
+          <h1>SQUARE DUDE AI</h1>
+          <p>KINEMATIC CONTROL LAB · LIQUID PLASMA UI</p>
         </div>
       </div>
+      <div class="top-actions">
+        <div class="status"><i class="dot" id="statusDot"></i><span id="statusText">SYSTEM READY</span></div>
+        <button class="icon-btn" id="undoBtn" title="Undo" aria-label="Undo">↶</button>
+        <button class="icon-btn" id="redoBtn" title="Redo" aria-label="Redo">↷</button>
+        <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">☷</button>
+      </div>
+    </header>
 
-      <div class="form-group">
-        <label>Joint Motor Angle State</label>
-        <div id="jointTelemetry"
-          style="font-family: monospace; font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
-          L-Leg: 0° | R-Leg: 0°<br>
-                    L-Arm: 0° | R-Arm: 0°<br>
-                    Head: 0°  | Tilt:  0°
+    <main class="layout">
+      <aside class="panel plasma chrome">
+        <div class="panel-inner">
+          <div class="panel-head"><span class="kicker">Control</span><span class="sub">01 / AI</span></div>
+          <div class="scroll">
+            <div class="field">
+              <label>PROVIDER</label>
+              <select id="provider"></select>
+            </div>
+            <div class="field">
+              <label>MODEL</label>
+              <select id="model"></select>
+            </div>
+            <div class="field" id="keyField">
+              <label>API KEY</label>
+              <input id="apiKey" type="password" autocomplete="off" placeholder="Stored locally on this device">
+            </div>
+            <div class="field hidden" id="endpointField">
+              <label>OPENAI-COMPATIBLE BASE URL</label>
+              <input id="endpoint" type="url" placeholder="https://api.openai.com/v1">
+            </div>
+            <div class="field hidden" id="customModelField">
+              <label>CUSTOM MODEL ID</label>
+              <input id="customModel" placeholder="model-name">
+            </div>
+
+            <div class="section">
+              <div class="field">
+                <label>LEARNING OBJECTIVE</label>
+                <select id="goal">
+                <option value="walk">Walk toward target</option>
+                <option value="dance">Perform a controlled dance</option>
+                <option value="wave">Wave both arms while balancing</option>
+                <option value="jump">Crouch and perform a high jump</option>
+              </select>
+              </div>
+              <div class="row">
+                <button class="btn primary" id="learnBtn">▶ Start learning</button>
+                <button class="btn" id="stepBtn">Step</button>
+              </div>
+              <button class="btn danger" id="resetBtn" style="width:100%;margin-top:7px">Reset simulation</button>
+            </div>
+
+            <div class="section">
+              <div class="toggle">
+                <div>
+                  <label style="display:block;color:#d5dbe0">REALISM MODE</label><span class="sub">Higher lighting quality</span>
+                </div>
+                <button class="switch on" id="realismSwitch" aria-label="Toggle realism"><i></i></button>
+              </div>
+              <div class="toggle" style="margin-top:7px">
+                <div>
+                  <label style="display:block;color:#d5dbe0">AUTO CAMERA</label><span class="sub">Keep subject framed</span>
+                </div>
+                <button class="switch" id="autoCameraSwitch" aria-label="Toggle auto camera"><i></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="viewport" id="viewport">
+        <div class="viewport-top">
+          <div class="hud">
+            <div class="chip"><strong>VIEWPORT</strong> / 3D</div>
+            <div class="chip" id="fpsChip">60 FPS</div>
+          </div>
+          <div class="hud">
+            <div class="chip">DRAG <strong>ORBIT</strong></div>
+            <div class="chip">SCROLL <strong>ZOOM</strong></div>
+          </div>
+        </div>
+        <div class="crosshair"></div>
+        <div class="viewport-bottom">
+          <div class="chip" id="targetChip">TARGET · 0.00 / 0.00</div>
+          <div class="chip"><strong>CLICK FLOOR</strong> TO REPOSITION TARGET</div>
+        </div>
+        <div class="toast" id="toast"></div>
+      </section>
+
+      <aside class="panel plasma chrome">
+        <div class="panel-inner">
+          <div class="panel-head"><span class="kicker">Telemetry</span><span class="sub">02 / LIVE</span></div>
+          <div class="log" id="log"></div>
+          <div class="section">
+            <div class="stats">
+              <div class="stat"><b class="accent" id="statSteps">0</b><span>Steps</span></div>
+              <div class="stat"><b id="statDistance">0.00m</b><span>Distance</span></div>
+              <div class="stat"><b id="statReward">0.0</b><span>Reward</span></div>
+              <div class="stat"><b id="statSpeed">0.0</b><span>Velocity</span></div>
+            </div>
+          </div>
+          <div class="section">
+            <label>JOINT STATE</label>
+            <div class="telemetry" id="jointTelemetry" style="margin-top:6px"></div>
+          </div>
+          <div class="section">
+            <div class="panel-head"><label>SIMULATION</label><span class="sub" id="simState">IDLE</span></div>
+            <div class="telemetry" style="margin-top:6px">
+              Target X <b id="tx">0.00</b><br>
+            Target Z <b id="tz">-4.00</b><br>
+            Root X <b id="rx">0.00</b><br>
+            Root Z <b id="rz">0.00</b>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal plasma">
+        <h2>System settings</h2>
+        <p>Visual, interaction and persistence controls. API credentials are kept only in this browser's local storage.
+        </p>
+        <div class="modal-grid">
+          <div class="field">
+            <label>RENDER SCALE</label><select id="renderScale"><option value="1">1×</option><option value="1.5" selected>1.5×</option><option value="2">2×</option></select>
+          </div>
+          <div class="field">
+            <label>GRID</label><select id="gridMode"><option value="full">Full</option><option value="minimal">Minimal</option><option value="off">Off</option></select>
+          </div>
+          <div class="field">
+            <label>SHADOW QUALITY</label><select id="shadowMode"><option value="low">Low</option><option value="high" selected>High</option></select>
+          </div>
+          <div class="field"><label>CAMERA FOV</label><input id="fov" type="number" min="35" max="75" value="50"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" id="closeSettings">Close</button><button class="btn primary" id="applySettings">Apply</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="touch-hint">💡 Drag/Pinch to Rotate Camera • Tap Floor to Move Target Flag</div>
-
-  <!-- Application Script -->
   <script>
-    // --- Models Preset Configuration ---
-        const MODEL_OPTIONS = {
-            openrouter: [
-                { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B (Free)" },
-                { id: "deepseek/deepseek-r1:free", name: "DeepSeek R1 Reasoning (Free)" },
-                { id: "qwen/qwen-2.5-72b-instruct:free", name: "Qwen 2.5 72B (Free)" },
-                { id: "anthropic/claude-3.5-sonnet", name: "Claude 3.5 Sonnet" },
-                { id: "openai/gpt-4o-mini", name: "GPT-4o Mini" }
-            ],
-            groq: [
-                { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B Versatile" },
-                { id: "llama3-8b-8192", name: "Llama 3 8B (Super Fast)" },
-                { id: "mixtral-8x7b-32768", name: "Mixtral 8x7b" }
-            ],
-            gemini: [
-                { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
-                { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" }
-            ],
-            custom: [
-                { id: "default", name: "Custom Model (Specified Endpoint)" }
-            ]
-        };
+    "use strict";
 
-        // --- 3D Scene Initialization ---
-        let scene, camera, renderer, controls;
-        let characterGroup, torsoMesh, headMesh, leftArmGroup, rightArmGroup, leftLegGroup, rightLegGroup;
-        let targetMesh;
-        let raycaster, touchMouse;
+/* ---------- provider configuration ---------- */
+const PROVIDERS = {
+  openrouter: {
+    name:"OpenRouter",
+    models:[
+      ["meta-llama/llama-3.3-70b-instruct:free","Llama 3.3 70B"],
+      ["deepseek/deepseek-r1:free","DeepSeek R1"],
+      ["qwen/qwen-2.5-72b-instruct:free","Qwen 2.5 72B"],
+      ["openai/gpt-4o-mini","GPT-4o Mini"]
+    ],
+    url:"https://openrouter.ai/api/v1/chat/completions"
+  },
+  groq: {
+    name:"Groq",
+    models:[
+      ["llama-3.3-70b-versatile","Llama 3.3 70B"],
+      ["llama3-8b-8192","Llama 3 8B"]
+    ],
+    url:"https://api.groq.com/openai/v1/chat/completions"
+  },
+  gemini: {
+    name:"Google Gemini",
+    models:[
+      ["gemini-2.0-flash","Gemini 2.0 Flash"],
+      ["gemini-1.5-pro","Gemini 1.5 Pro"]
+    ],
+    url:"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+  },
+  custom: {name:"Custom OpenAI-compatible",models:[["custom","Custom model"]],url:""}
+};
 
-        // Kinematic State
-        const dudeState = {
-            pos: new THREE.Vector3(0, 1.4, 0),
-            rotY: 0,
-            head: { x: 0, y: 0, z: 0 },
-            leftArm: { x: 0, y: 0, z: 0 },
-            rightArm: { x: 0, y: 0, z: 0 },
-            leftLeg: { x: 0, y: 0, z: 0 },
-            rightLeg: { x: 0, y: 0, z: 0 },
-            torsoTilt: { x: 0, z: 0 }
-        };
+const STORAGE_KEY = "square_dude_ai_liquid_plasma_v2";
 
-        const targetState = {
-            targetAngles: JSON.parse(JSON.stringify(dudeState)),
-            targetPos: new THREE.Vector3(0, 1.4, 0),
-            dur: 0.5,
-            progress: 1.0
-        };
+/* ---------- app state ---------- */
+const state = {
+  provider:"openrouter",
+  model:"",
+  apiKey:"",
+  endpoint:"https://api.openai.com/v1",
+  customModel:"",
+  goal:"walk",
+  learning:false,
+  requestInFlight:false,
+  abortController:null,
+  step:0,
+  target:new THREE.Vector3(0,0,-4),
+  previousRoot:new THREE.Vector3(0,1.4,0),
+  realism:true,
+  autoCamera:false,
+  history:[],
+  historyIndex:-1
+};
 
-        let targetPosition = new THREE.Vector3(0, 0, -4);
-        let stepCounter = 0;
-        let isLearning = false;
-        let learningInterval = null;
+let scene,camera,renderer,controls,clock,raycaster,pointer;
+let character,torso,head,leftArm,rightArm,leftLeg,rightLeg,targetGroup,floor,grid;
+let lastFrame=performance.now(),frames=0,lastFpsUpdate=performance.now();
+let targetPose = {head:{x:0,y:0,z:0},leftArm:{x:0,y:0,z:0},rightArm:{x:0,y:0,z:0},leftLeg:{x:0,y:0,z:0},rightLeg:{x:0,y:0,z:0},torso:{x:0,z:0},rotY:0};
+let currentPose = JSON.parse(JSON.stringify(targetPose));
 
-        function init3D() {
-            const container = document.getElementById('canvas-container');
+const $ = id => document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rad=v=>THREE.MathUtils.degToRad(v);
+const now=()=>new Date().toLocaleTimeString([], {hour12:false});
 
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0b0f19);
-            scene.fog = new THREE.FogExp2(0x0b0f19, 0.035);
-
-            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 3.5, 6.5);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            container.appendChild(renderer.domElement);
-
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.maxPolarAngle = Math.PI / 2 + 0.05;
-            controls.minDistance = 2;
-            controls.maxDistance = 15;
-            controls.target.set(0, 1.2, 0);
-
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-
-            const dirLight = new THREE.DirectionalLight(0x00f2fe, 1.2);
-            dirLight.position.set(5, 10, 7);
-            dirLight.castShadow = true;
-            dirLight.shadow.mapSize.width = 1024;
-            dirLight.shadow.mapSize.height = 1024;
-            scene.add(dirLight);
-
-            const fillLight = new THREE.DirectionalLight(0xff007f, 0.4);
-            fillLight.position.set(-5, 5, -5);
-            scene.add(fillLight);
-
-            // Ground Grid & Floor Plane
-            const gridHelper = new THREE.GridHelper(30, 30, 0x00f2fe, 0x1f293d);
-            gridHelper.position.y = 0;
-            scene.add(gridHelper);
-
-            const planeGeo = new THREE.PlaneGeometry(50, 50);
-            const planeMat = new THREE.MeshStandardMaterial({ color: 0x070a12, roughness: 0.8 });
-            const floor = new THREE.Mesh(planeGeo, planeMat);
-            floor.rotation.x = -Math.PI / 2;
-            floor.receiveShadow = true;
-            scene.add(floor);
-
-            // Create Target Flag / Beacon
-            const targetGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 16);
-            const targetMat = new THREE.MeshStandardMaterial({ color: 0x00e676, emissive: 0x00e676, emissiveIntensity: 0.6 });
-            targetMesh = new THREE.Mesh(targetGeo, targetMat);
-            targetMesh.position.copy(targetPosition);
-            
-            const poleGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.5, 8);
-            const poleMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const pole = new THREE.Mesh(poleGeo, poleMat);
-            pole.position.y = 0.75;
-            targetMesh.add(pole);
-
-            scene.add(targetMesh);
-
-            // Create 6-Block Square Dude Character
-            createSquareDude();
-
-            // Touch Raycasting for target placement
-            raycaster = new THREE.Raycaster();
-            touchMouse = new THREE.Vector2();
-
-            window.addEventListener('resize', onWindowResize);
-            renderer.domElement.addEventListener('pointerdown', onPointerDown);
-
-            animate();
-        }
-
-        // --- 6-Square Character Hierarchy Construction ---
-        function createSquareDude() {
-            characterGroup = new THREE.Group();
-            characterGroup.position.copy(dudeState.pos);
-
-            // Vibrant Material Palette
-            const torsoMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.3, metalness: 0.1 });
-            const headMat = new THREE.MeshStandardMaterial({ color: 0x6366f1, roughness: 0.3 });
-            const limbMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, roughness: 0.4 });
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
-            // 1. TORSO (Block 1)
-            const torsoGeo = new THREE.BoxGeometry(0.8, 1.0, 0.5);
-            torsoMesh = new THREE.Mesh(torsoGeo, torsoMat);
-            torsoMesh.castShadow = true;
-            characterGroup.add(torsoMesh);
-
-            // 2. HEAD (Block 2)
-            const headGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-            headMesh = new THREE.Mesh(headGeo, headMat);
-            headMesh.position.set(0, 0.8, 0);
-            headMesh.castShadow = true;
-            torsoMesh.add(headMesh);
-
-            // Eyes on Head
-            const eyeGeo = new THREE.BoxGeometry(0.12, 0.12, 0.05);
-            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-            leftEye.position.set(-0.16, 0.08, 0.31);
-            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-            rightEye.position.set(0.16, 0.08, 0.31);
-            headMesh.add(leftEye);
-            headMesh.add(rightEye);
-
-            // 3. LEFT ARM (Block 3)
-            leftArmGroup = new THREE.Group();
-            leftArmGroup.position.set(-0.55, 0.4, 0);
-            const armGeo = new THREE.BoxGeometry(0.3, 0.8, 0.3);
-            armGeo.translate(0, -0.35, 0); // Pivot at shoulder
-            const leftArmMesh = new THREE.Mesh(armGeo, limbMat);
-            leftArmMesh.castShadow = true;
-            leftArmGroup.add(leftArmMesh);
-            torsoMesh.add(leftArmGroup);
-
-            // 4. RIGHT ARM (Block 4)
-            rightArmGroup = new THREE.Group();
-            rightArmGroup.position.set(0.55, 0.4, 0);
-            const rightArmMesh = new THREE.Mesh(armGeo, limbMat);
-            rightArmMesh.castShadow = true;
-            rightArmGroup.add(rightArmMesh);
-            torsoMesh.add(rightArmGroup);
-
-            // 5. LEFT LEG (Block 5)
-            leftLegGroup = new THREE.Group();
-            leftLegGroup.position.set(-0.25, -0.5, 0);
-            const legGeo = new THREE.BoxGeometry(0.32, 0.9, 0.32);
-            legGeo.translate(0, -0.4, 0); // Pivot at hip
-            const leftLegMesh = new THREE.Mesh(legGeo, limbMat);
-            leftLegMesh.castShadow = true;
-            leftLegGroup.add(leftLegMesh);
-            torsoMesh.add(leftLegGroup);
-
-            // 6. RIGHT LEG (Block 6)
-            rightLegGroup = new THREE.Group();
-            rightLegGroup.position.set(0.25, -0.5, 0);
-            const rightLegMesh = new THREE.Mesh(legGeo, limbMat);
-            rightLegMesh.castShadow = true;
-            rightLegGroup.add(rightLegMesh);
-            torsoMesh.add(rightLegGroup);
-
-            scene.add(characterGroup);
-        }
-
-        // Pointer click to move target flag
-        function onPointerDown(event) {
-            // Ignore UI clicks
-            if (event.clientY < 70 || event.clientX < 340 && window.innerWidth > 900) return;
-
-            touchMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            touchMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(touchMouse, camera);
-            const intersects = raycaster.intersectObjects(scene.children);
-
-            for (let hit of intersects) {
-                if (hit.object !== targetMesh && hit.object.geometry && hit.object.geometry.type === "PlaneGeometry") {
-                    targetPosition.copy(hit.point);
-                    targetPosition.y = 0;
-                    targetMesh.position.copy(targetPosition);
-                    break;
-                }
-            }
-        }
-
-        // Animation Loop & Interpolation
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Interpolate current pose towards AI target pose smoothly
-            if (targetState.progress < 1.0) {
-                targetState.progress += 0.05;
-                const t = Math.min(targetState.progress, 1.0);
-
-                // Lerp joint angles
-                lerpJoint(leftLegGroup.rotation, targetState.targetAngles.leftLeg, t);
-                lerpJoint(rightLegGroup.rotation, targetState.targetAngles.rightLeg, t);
-                lerpJoint(leftArmGroup.rotation, targetState.targetAngles.leftArm, t);
-                lerpJoint(rightArmGroup.rotation, targetState.targetAngles.rightArm, t);
-                lerpJoint(headMesh.rotation, targetState.targetAngles.head, t);
-
-                // Lerp Torso tilt & character root position
-                torsoMesh.rotation.x = THREE.MathUtils.lerp(torsoMesh.rotation.x, targetState.targetAngles.torsoTilt.x, 0.1);
-                torsoMesh.rotation.z = THREE.MathUtils.lerp(torsoMesh.rotation.z, targetState.targetAngles.torsoTilt.z, 0.1);
-
-                characterGroup.position.lerp(targetState.targetPos, 0.08);
-                characterGroup.rotation.y = THREE.MathUtils.lerp(characterGroup.rotation.y, targetState.targetAngles.rotY, 0.1);
-            }
-
-            // Keep controls active
-            controls.update();
-
-            // Update UI telemetry
-            updateTelemetryDisplay();
-
-            renderer.render(scene, camera);
-        }
-
-        function lerpJoint(euler, targetRot, t) {
-            euler.x = THREE.MathUtils.lerp(euler.x, targetRot.x || 0, 0.1);
-            euler.y = THREE.MathUtils.lerp(euler.y, targetRot.y || 0, 0.1);
-            euler.z = THREE.MathUtils.lerp(euler.z, targetRot.z || 0, 0.1);
-        }
-
-        function updateTelemetryDisplay() {
-            const dist = characterGroup.position.distanceTo(targetPosition);
-            document.getElementById('statDistance').innerText = dist.toFixed(2) + 'm';
-            document.getElementById('statSteps').innerText = stepCounter;
-
-            // Simple reward score based on proximity to target
-            const reward = Math.max(0, (10 - dist) * 10).toFixed(1);
-            document.getElementById('statReward').innerText = reward;
-
-            document.getElementById('jointTelemetry').innerHTML = `
-                L-Leg X: ${(leftLegGroup.rotation.x * 57.3).toFixed(0)}° | R-Leg X: ${(rightLegGroup.rotation.x * 57.3).toFixed(0)}°<br>
-                L-Arm X: ${(leftArmGroup.rotation.x * 57.3).toFixed(0)}° | R-Arm X: ${(rightArmGroup.rotation.x * 57.3).toFixed(0)}°<br>
-                Rot Y: ${(characterGroup.rotation.y * 57.3).toFixed(0)}° | Tilt Z: ${(torsoMesh.rotation.z * 57.3).toFixed(0)}°
-            `;
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        // --- Settings & Provider Logic ---
-        function onProviderChange() {
-            const provider = document.getElementById('providerSelect').value;
-            const modelSelect = document.getElementById('modelSelect');
-            const customGroup = document.getElementById('customUrlGroup');
-            const customModelGroup = document.getElementById('customModelGroup');
-
-            modelSelect.innerHTML = '';
-            const models = MODEL_OPTIONS[provider] || [];
-
-            models.forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m.id;
-                opt.textContent = m.name;
-                modelSelect.appendChild(opt);
-            });
-
-            const isCustom = (provider === 'custom');
-            customGroup.style.display = isCustom ? 'flex' : 'none';
-            if (customModelGroup) customModelGroup.style.display = isCustom ? 'flex' : 'none';
-            saveSettings();
-        }
-
-        function saveSettings() {
-            const settings = {
-                provider: document.getElementById('providerSelect').value,
-                key: document.getElementById('apiKeyInput').value,
-                model: document.getElementById('modelSelect').value,
-                customUrl: document.getElementById('customUrlInput').value,
-                customModel: document.getElementById('customModelInput') ? document.getElementById('customModelInput').value : ''
-            };
-            localStorage.setItem('square_dude_ai_settings', JSON.stringify(settings));
-        }
-
-        function loadSettings() {
-            const saved = localStorage.getItem('square_dude_ai_settings');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    if (data.provider) document.getElementById('providerSelect').value = data.provider;
-                    onProviderChange();
-                    if (data.key) document.getElementById('apiKeyInput').value = data.key;
-                    if (data.model) document.getElementById('modelSelect').value = data.model;
-                    if (data.customUrl) document.getElementById('customUrlInput').value = data.customUrl;
-                    if (data.customModel && document.getElementById('customModelInput')) document.getElementById('customModelInput').value = data.customModel;
-                } catch(e) {}
-            } else {
-                onProviderChange();
-            }
-        }
-
-        // --- AI API Dispatcher & Motor Kinematics Control Loop ---
-        async function runAIStep() {
-            const provider = document.getElementById('providerSelect').value;
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            const model = document.getElementById('modelSelect').value;
-            const goal = document.getElementById('goalSelect').value;
-
-            if (!apiKey && provider !== 'custom') {
-                logThought("⚠️ Please enter an API Key to begin AI learning steps!");
-                setStatus("API Key Missing", false);
-                toggleLearning(false);
-                return;
-            }
-
-            setStatus("AI Thinking...", true);
-
-            // Construct state context for the LLM
-            const dx = (targetPosition.x - characterGroup.position.x).toFixed(2);
-            const dz = (targetPosition.z - characterGroup.position.z).toFixed(2);
-            const dist = characterGroup.position.distanceTo(targetPosition).toFixed(2);
-
-            const promptSystem = `You are the motor control center and brain of a 6-block 3D character.
-Your objective is to: ${goal}.
-Character target position relative offset: dx=${dx}, dz=${dz}, total distance=${dist}m.
-Current orientation Y-angle: ${characterGroup.rotation.y.toFixed(2)} rad.
-
-You must respond ONLY with a valid raw JSON object matching this structure:
-{
-    "thought": "Short 1-sentence reasoning on how to move joint angles to achieve goal",
-    "stepDistance": 0.35,
-    "rotYOffset": 0.1,
-    "torsoTilt": {"x": 0.0, "z": 0.0},
-    "leftLeg": {"x": 0.5, "y": 0.0, "z": 0.0},
-    "rightLeg": {"x": -0.5, "y": 0.0, "z": 0.0},
-    "leftArm": {"x": -0.4, "y": 0.0, "z": 0.0},
-    "rightArm": {"x": 0.4, "y": 0.0, "z": 0.0},
-    "head": {"x": 0.0, "y": 0.0, "z": 0.0}
+/* ---------- UI ---------- */
+function log(msg,type=""){
+  const box=$("log");
+  const line=document.createElement("div");
+  line.className="line";
+  const t=document.createElement("span"); t.className="time"; t.textContent=`[${now()}] `;
+  const m=document.createElement("span"); if(type)m.className=type; m.textContent=msg;
+  line.append(t,m); box.prepend(line);
+  while(box.children.length>80) box.lastChild.remove();
 }
-Keep joint angles in radians (-1.2 to 1.2). stepDistance (0.0 to 0.5m) moves character forward. No markdown codeblocks! Just plain JSON.`;
+function toast(msg){
+  const t=$("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),1700);
+}
+function setStatus(text,active=false){
+  $("statusText").textContent=text.toUpperCase();
+  $("statusDot").classList.toggle("active",active);
+  $("simState").textContent=active?"RUNNING":"IDLE";
+}
+function populateProviders(){
+  $("provider").innerHTML=Object.entries(PROVIDERS).map(([id,p])=>`<option value="${id}">${p.name}</option>`).join("");
+  $("provider").value=state.provider;
+  populateModels();
+}
+function populateModels(){
+  const p=PROVIDERS[$("provider").value];
+  $("model").innerHTML=p.models.map(([id,n])=>`<option value="${id}">${n}</option>`).join("");
+  $("model").value=state.model && p.models.some(x=>x[0]===state.model)?state.model:p.models[0][0];
+  const custom=$("provider").value==="custom";
+  $("endpointField").classList.toggle("hidden",!custom);
+  $("customModelField").classList.toggle("hidden",!custom);
+  $("keyField").classList.toggle("hidden",false);
+}
+function save(){
+  state.provider=$("provider").value;
+  state.model=$("model").value;
+  state.apiKey=$("apiKey").value;
+  state.endpoint=$("endpoint").value.trim() || "https://api.openai.com/v1";
+  state.customModel=$("customModel").value.trim();
+  state.goal=$("goal").value;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({
+    provider:state.provider,model:state.model,apiKey:state.apiKey,endpoint:state.endpoint,
+    customModel:state.customModel,goal:state.goal,realism:state.realism,autoCamera:state.autoCamera
+  }));
+}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
+    if(d){
+      Object.assign(state,d);
+      $("provider").value=state.provider;
+      populateModels();
+      $("model").value=state.model||$("model").value;
+      $("apiKey").value=state.apiKey||"";
+      $("endpoint").value=state.endpoint||"https://api.openai.com/v1";
+      $("customModel").value=state.customModel||"";
+      $("goal").value=state.goal||"walk";
+      $("realismSwitch").classList.toggle("on",state.realism);
+      $("autoCameraSwitch").classList.toggle("on",state.autoCamera);
+    }
+  }catch(e){log("Settings reset because stored data was invalid.","warn")}
+}
+function toggleSwitch(el,key){
+  state[key]=!state[key];el.classList.toggle("on",state[key]);save();
+}
+$("provider").addEventListener("change",()=>{populateModels();save()});
+["model","apiKey","endpoint","customModel","goal"].forEach(id=>$(id).addEventListener("change",save));
+$("realismSwitch").onclick=()=>toggleSwitch($("realismSwitch"),"realism");
+$("autoCameraSwitch").onclick=()=>toggleSwitch($("autoCameraSwitch"),"autoCamera");
 
-            try {
-                const responseData = await fetchAICompletion(provider, apiKey, model, promptSystem);
-                parseAndApplyMotorAction(responseData);
-                setStatus("Learning Active", true);
-            } catch (err) {
-                logThought(`❌ API Error: ${err.message}`);
-                setStatus("Error", false);
-                toggleLearning(false);
-            }
-        }
+/* ---------- 3D scene ---------- */
+function init3D(){
+  clock=new THREE.Clock();
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x06080c);
+  scene.fog=new THREE.FogExp2(0x06080c,.027);
 
-        async function fetchAICompletion(provider, key, model, prompt) {
-            let url = "";
-            let headers = { "Content-Type": "application/json" };
-            let body = {};
+  camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.05,120);
+  camera.position.set(0,3.2,6.4);
 
-            if (provider === "openrouter") {
-                url = "https://openrouter.ai/api/v1/chat/completions";
-                headers["Authorization"] = `Bearer ${key}`;
-                body = {
-                    model: model,
-                    messages: [{ role: "user", content: prompt }],
-                    temperature: 0.6
-                };
-            } else if (provider === "groq") {
-                url = "https://api.groq.com/openai/v1/chat/completions";
-                headers["Authorization"] = `Bearer ${key}`;
-                body = {
-                    model: model,
-                    messages: [{ role: "user", content: prompt }],
-                    temperature: 0.6
-                };
-            } else if (provider === "gemini") {
-                url = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
-                headers["Authorization"] = `Bearer ${key}`;
-                body = {
-                    model: model,
-                    messages: [{ role: "user", content: prompt }]
-                };
-            } else if (provider === "custom") {
-                const baseUrl = document.getElementById('customUrlInput').value.trim() || "https://api.openai.com/v1";
-                const customModelInput = document.getElementById('customModelInput');
-                const customModelName = (customModelInput && customModelInput.value.trim()) ? customModelInput.value.trim() : (model || "gpt-3.5-turbo");
-                url = `${baseUrl}/chat/completions`;
-                if (key) headers["Authorization"] = `Bearer ${key}`;
-                body = {
-                    model: customModelName,
-                    messages: [{ role: "user", content: prompt }]
-                };
-            }
+  renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
+  renderer.setSize(innerWidth,innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  $("stage").appendChild(renderer.domElement);
 
-            const res = await fetch(url, {
-                method: "POST",
-                headers: headers,
-                body: JSON.stringify(body)
-            });
+  controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;
+  controls.dampingFactor=.065;
+  controls.minDistance=2.2;
+  controls.maxDistance=16;
+  controls.maxPolarAngle=Math.PI*.49;
+  controls.target.set(0,1.1,0);
 
-            if (!res.ok) {
-                const errText = await res.text();
-                throw new Error(`HTTP ${res.status}: ${errText.substring(0, 100)}`);
-            }
+  scene.add(new THREE.HemisphereLight(0xd9f5ff,0x07090d,.72));
+  const key=new THREE.DirectionalLight(0xc9f4ff,1.35);
+  key.position.set(5,9,6);key.castShadow=true;
+  key.shadow.mapSize.set(1024,1024);
+  key.shadow.camera.near=.5;key.shadow.camera.far=30;
+  key.shadow.camera.left=-10;key.shadow.camera.right=10;key.shadow.camera.top=10;key.shadow.camera.bottom=-10;
+  scene.add(key);
 
-            const data = await res.json();
-            return data.choices[0].message.content;
-        }
+  const rim=new THREE.PointLight(0x53cfff,1.15,12);rim.position.set(-4,4,-5);scene.add(rim);
+  const warm=new THREE.PointLight(0x5f8cff,.38,9);warm.position.set(5,2,2);scene.add(warm);
 
-        function parseAndApplyMotorAction(rawContent) {
-            try {
-                // Strip markdown backticks if present
-                let cleanJson = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
-                const action = JSON.parse(cleanJson);
+  const floorMat=new THREE.MeshStandardMaterial({color:0x080b10,roughness:.82,metalness:.08});
+  floor=new THREE.Mesh(new THREE.PlaneGeometry(50,50),floorMat);
+  floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.userData.isFloor=true;scene.add(floor);
 
-                if (action.thought) {
-                    logThought(`Episode #${stepCounter + 1}: ${action.thought}`);
-                }
+  grid=new THREE.GridHelper(30,30,0x34515e,0x15212a);
+  grid.position.y=.006;scene.add(grid);
 
-                // Update targets for interpolation
-                targetState.targetAngles.leftLeg = action.leftLeg || { x: 0, y: 0, z: 0 };
-                targetState.targetAngles.rightLeg = action.rightLeg || { x: 0, y: 0, z: 0 };
-                targetState.targetAngles.leftArm = action.leftArm || { x: 0, y: 0, z: 0 };
-                targetState.targetAngles.rightArm = action.rightArm || { x: 0, y: 0, z: 0 };
-                targetState.targetAngles.head = action.head || { x: 0, y: 0, z: 0 };
-                targetState.targetAngles.torsoTilt = action.torsoTilt || { x: 0, z: 0 };
+  createTarget();
+  createCharacter();
+  raycaster=new THREE.Raycaster();pointer=new THREE.Vector2();
 
-                // Calculate position step towards facing direction
-                const currentY = characterGroup.rotation.y + (action.rotYOffset || 0);
-                targetState.targetAngles.rotY = currentY;
+  renderer.domElement.addEventListener("pointerdown",onViewportPointer,{passive:true});
+  addEventListener("resize",onResize);
+  animate();
+}
+function makePlasmaMaterial(color,rough=.3,metal=.18){
+  return new THREE.MeshStandardMaterial({
+    color,roughness:rough,metalness:metal,emissive:color,emissiveIntensity:.055
+  });
+}
+function createCharacter(){
+  character=new THREE.Group();character.position.set(0,1.4,0);
+  const torsoMat=makePlasmaMaterial(0x3b78a0,.29,.22);
+  const limbMat=makePlasmaMaterial(0x55bdd5,.34,.2);
+  const headMat=makePlasmaMaterial(0x6677b6,.3,.16);
+  const eyeMat=new THREE.MeshStandardMaterial({color:0xeaffff,emissive:0xbff6ff,emissiveIntensity:.7});
 
-                const stepDist = Math.min(Math.max(action.stepDistance || 0, -0.4), 0.6);
-                const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), currentY);
-                
-                targetState.targetPos.copy(characterGroup.position).addScaledVector(forward, stepDist);
-                targetState.progress = 0.0; // Reset lerp loop
+  torso=new THREE.Mesh(new THREE.BoxGeometry(.82,1,.52),torsoMat);
+  torso.castShadow=true;character.add(torso);
 
-                stepCounter++;
-            } catch (err) {
-                logThought(`⚠️ Failed to parse LLM Motor output: ${rawContent.substring(0, 80)}...`);
-            }
-        }
+  head=new THREE.Mesh(new THREE.BoxGeometry(.61,.61,.61),headMat);
+  head.position.set(0,.8,0);head.castShadow=true;torso.add(head);
 
-        function toggleLearning(forceState) {
-            isLearning = (forceState !== undefined) ? forceState : !isLearning;
-            const btn = document.getElementById('trainBtn');
+  const eyeGeo=new THREE.BoxGeometry(.12,.12,.045);
+  [-.16,.16].forEach(x=>{const e=new THREE.Mesh(eyeGeo,eyeMat);e.position.set(x,.08,.315);head.add(e)});
 
-            if (isLearning) {
-                btn.innerText = "⏸ Pause AI Learning";
-                btn.classList.add("btn-secondary");
-                setStatus("AI Continuous Learning", true);
-                runAIStep();
-                learningInterval = setInterval(runAIStep, 1200);
-            } else {
-                btn.innerText = "▶ Start AI Learning";
-                btn.classList.remove("btn-secondary");
-                if (learningInterval) clearInterval(learningInterval);
-                setStatus("System Ready", false);
-            }
-        }
+  leftArm=joint(-.56,.4,limbMat,.30,.8,.30);
+  rightArm=joint(.56,.4,limbMat,.30,.8,.30);
+  leftLeg=joint(-.25,-.5,limbMat,.32,.9,.32);
+  rightLeg=joint(.25,-.5,limbMat,.32,.9,.32);
+  scene.add(character);
+}
+function joint(x,y,mat,w,h,d){
+  const g=new THREE.Group();g.position.set(x,y,0);
+  const geo=new THREE.BoxGeometry(w,h,d);geo.translate(0,-h/2,0);
+  const m=new THREE.Mesh(geo,mat);m.castShadow=true;g.add(m);torso.add(g);return g;
+}
+function createTarget(){
+  targetGroup=new THREE.Group();
+  const baseMat=new THREE.MeshStandardMaterial({color:0xa8efff,emissive:0x63dfff,emissiveIntensity:.65,roughness:.25,metalness:.2});
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(.31,.31,.08,24),baseMat);
+  base.position.y=.04;base.receiveShadow=true;targetGroup.add(base);
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.45,10),new THREE.MeshBasicMaterial({color:0xdafaff}));
+  pole.position.y=.76;targetGroup.add(pole);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.43,.018,8,32),new THREE.MeshBasicMaterial({color:0x7fe5ff,transparent:true,opacity:.72}));
+  ring.rotation.x=Math.PI/2;ring.position.y=.075;targetGroup.add(ring);
+  targetGroup.position.copy(state.target);scene.add(targetGroup);
+}
+function setTarget(x,z,record=true){
+  state.target.set(x,0,z);targetGroup.position.set(x,0,z);
+  if(record) pushHistory();
+  updateUI();
+}
+function onViewportPointer(e){
+  if(e.button!==undefined && e.button!==0)return;
+  const rect=renderer.domElement.getBoundingClientRect();
+  pointer.x=((e.clientX-rect.left)/rect.width)*2-1;
+  pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(pointer,camera);
+  const hits=raycaster.intersectObject(floor,false);
+  if(hits.length){const p=hits[0].point;setTarget(clamp(p.x,-15,15),clamp(p.z,-15,15),true);toast("Target repositioned")}
+}
+function onResize(){
+  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+}
+function applyPose(){
+  const p=targetPose;
+  leftLeg.rotation.set(p.leftLeg.x,p.leftLeg.y,p.leftLeg.z);
+  rightLeg.rotation.set(p.rightLeg.x,p.rightLeg.y,p.rightLeg.z);
+  leftArm.rotation.set(p.leftArm.x,p.leftArm.y,p.leftArm.z);
+  rightArm.rotation.set(p.rightArm.x,p.rightArm.y,p.rightArm.z);
+  head.rotation.set(p.head.x,p.head.y,p.head.z);
+  torso.rotation.set(p.torso.x,0,p.torso.z);
+  character.rotation.y=p.rotY;
+}
+function smoothPose(){
+  const speed=.11;
+  const lerpObj=(o,t)=>{o.x=THREE.MathUtils.lerp(o.x,t.x,speed);o.y=THREE.MathUtils.lerp(o.y,t.y,speed);o.z=THREE.MathUtils.lerp(o.z,t.z,speed)};
+  lerpObj(leftLeg.rotation,targetPose.leftLeg);lerpObj(rightLeg.rotation,targetPose.rightLeg);
+  lerpObj(leftArm.rotation,targetPose.leftArm);lerpObj(rightArm.rotation,targetPose.rightArm);
+  lerpObj(head.rotation,targetPose.head);
+  torso.rotation.x=THREE.MathUtils.lerp(torso.rotation.x,targetPose.torso.x,speed);
+  torso.rotation.z=THREE.MathUtils.lerp(torso.rotation.z,targetPose.torso.z,speed);
+  character.rotation.y=THREE.MathUtils.lerp(character.rotation.y,targetPose.rotY,speed);
+}
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),.05);
+  smoothPose();
+  controls.update();
+  if(state.autoCamera){
+    const desired=new THREE.Vector3(character.position.x,2.7,character.position.z+5.7);
+    camera.position.lerp(desired,.012);controls.target.lerp(new THREE.Vector3(character.position.x,1.1,character.position.z),.012);
+  }
+  targetGroup.rotation.y+=dt*.25;
+  targetGroup.children[2].scale.setScalar(1+Math.sin(performance.now()*.004)*.025);
+  updateTelemetry(dt);
+  renderer.render(scene,camera);
 
-        function stepOnce() {
-            if (isLearning) toggleLearning(false);
-            runAIStep();
-        }
+  frames++;
+  if(performance.now()-lastFpsUpdate>700){
+    const fps=Math.round(frames*1000/(performance.now()-lastFpsUpdate));
+    $("fpsChip").textContent=`${fps} FPS`;
+    frames=0;lastFpsUpdate=performance.now();
+  }
+}
+function updateTelemetry(dt){
+  const dist=character.position.distanceTo(state.target);
+  const moved=character.position.distanceTo(state.previousRoot);
+  const speed=dt>0?moved/dt:0;
+  $("statSteps").textContent=state.step;
+  $("statDistance").textContent=dist.toFixed(2)+"m";
+  $("statReward").textContent=Math.max(0,(10-dist)*10).toFixed(1);
+  $("statSpeed").textContent=speed.toFixed(2);
+  $("tx").textContent=state.target.x.toFixed(2);$("tz").textContent=state.target.z.toFixed(2);
+  $("rx").textContent=character.position.x.toFixed(2);$("rz").textContent=character.position.z.toFixed(2);
+  $("targetChip").textContent=`TARGET · ${state.target.x.toFixed(2)} / ${state.target.z.toFixed(2)}`;
+  const d=THREE.MathUtils.radToDeg;
+  $("jointTelemetry").innerHTML=
+    `L-LEG <b>${d(leftLeg.rotation.x).toFixed(0)}°</b> · R-LEG <b>${d(rightLeg.rotation.x).toFixed(0)}°</b><br>`+
+    `L-ARM <b>${d(leftArm.rotation.x).toFixed(0)}°</b> · R-ARM <b>${d(rightArm.rotation.x).toFixed(0)}°</b><br>`+
+    `HEAD <b>${d(head.rotation.x).toFixed(0)}°</b> · ROOT <b>${d(character.rotation.y).toFixed(0)}°</b><br>`+
+    `TILT <b>${d(torso.rotation.z).toFixed(0)}°</b>`;
+}
 
-        function resetDude() {
-            if (isLearning) toggleLearning(false);
-            characterGroup.position.set(0, 1.4, 0);
-            characterGroup.rotation.set(0, 0, 0);
-            torsoMesh.rotation.set(0, 0, 0);
-            leftArmGroup.rotation.set(0, 0, 0);
-            rightArmGroup.rotation.set(0, 0, 0);
-            leftLegGroup.rotation.set(0, 0, 0);
-            rightLegGroup.rotation.set(0, 0, 0);
-            headMesh.rotation.set(0, 0, 0);
-            
-            targetState.targetPos.copy(characterGroup.position);
-            stepCounter = 0;
-            logThought("Dude position and joints reset to origin.");
-        }
+/* ---------- undo / redo ---------- */
+function snapshot(){
+  return {
+    target:[state.target.x,state.target.z],
+    position:[character.position.x,character.position.z],
+    rotY:character.rotation.y,
+    pose:JSON.parse(JSON.stringify(targetPose))
+  };
+}
+function restore(s){
+  state.target.set(s.target[0],0,s.target[1]);targetGroup.position.copy(state.target);
+  character.position.set(s.position[0],1.4,s.position[1]);
+  targetPose=JSON.parse(JSON.stringify(s.pose));applyPose();updateUI();
+}
+function pushHistory(){
+  if(!character||!targetGroup)return;
+  const s=snapshot();
+  if(state.historyIndex>=0 && JSON.stringify(state.history[state.historyIndex])===JSON.stringify(s))return;
+  state.history=state.history.slice(0,state.historyIndex+1);state.history.push(s);
+  if(state.history.length>60)state.history.shift();
+  state.historyIndex=state.history.length-1;updateHistoryButtons();
+}
+function undo(){
+  if(state.historyIndex<=0)return;
+  state.historyIndex--;restore(state.history[state.historyIndex]);toast("Undo");updateHistoryButtons();
+}
+function redo(){
+  if(state.historyIndex>=state.history.length-1)return;
+  state.historyIndex++;restore(state.history[state.historyIndex]);toast("Redo");updateHistoryButtons();
+}
+function updateHistoryButtons(){
+  $("undoBtn").style.opacity=state.historyIndex>0?"1":".35";
+  $("redoBtn").style.opacity=state.historyIndex<state.history.length-1?"1":".35";
+}
+$("undoBtn").onclick=undo;$("redoBtn").onclick=redo;
 
-        function logThought(msg) {
-            const box = document.getElementById('thoughtLog');
-            box.innerText = msg + "\n\n" + box.innerText;
-        }
+/* ---------- AI ---------- */
+function buildPrompt(){
+  const dx=state.target.x-character.position.x, dz=state.target.z-character.position.z;
+  return `You control a simple six-block 3D character.
+Objective: ${$("goal").value}.
+Target offset: dx=${dx.toFixed(3)}, dz=${dz.toFixed(3)}.
+Distance: ${character.position.distanceTo(state.target).toFixed(3)}m.
+Current yaw: ${character.rotation.y.toFixed(3)} radians.
 
-        function setStatus(text, active) {
-            document.getElementById('statusText').innerText = text;
-            const dot = document.getElementById('statusDot');
-            if (active) {
-                dot.classList.add('learning');
-            } else {
-                dot.classList.remove('learning');
-            }
-        }
+Return ONLY one JSON object. No markdown.
+Schema:
+{"thought":"brief control explanation","stepDistance":0.0,"rotYOffset":0.0,
+"torsoTilt":{"x":0,"z":0},
+"leftLeg":{"x":0,"y":0,"z":0},"rightLeg":{"x":0,"y":0,"z":0},
+"leftArm":{"x":0,"y":0,"z":0},"rightArm":{"x":0,"y":0,"z":0},
+"head":{"x":0,"y":0,"z":0}}
+Constraints: joint values -1.2..1.2 radians; stepDistance 0..0.5; rotYOffset -0.5..0.5.`;
+}
+async function requestAI(){
+  if(state.requestInFlight){toast("AI request already running");return}
+  state.requestInFlight=true;$("stepBtn").disabled=true;setStatus("AI THINKING",true);
+  state.abortController=new AbortController();
+  try{
+    const raw=await fetchCompletion(buildPrompt(),state.abortController.signal);
+    const action=parseAction(raw);
+    applyAction(action);
+    state.step++;
+    log(`Step ${state.step}: ${action.thought||"Motor policy updated."}`,"ok");
+    setStatus(state.learning?"LEARNING":"SYSTEM READY",state.learning);
+  }catch(err){
+    if(err.name!=="AbortError"){log(`AI error: ${err.message}`,"err");setStatus("AI ERROR",false)}
+  }finally{
+    state.requestInFlight=false;$("stepBtn").disabled=false;state.abortController=null;
+  }
+}
+async function fetchCompletion(prompt,signal){
+  const provider=$("provider").value,key=$("apiKey").value.trim();
+  if(!key){throw new Error("API key is missing. Add one in Control.");}
+  let url=PROVIDERS[provider].url;
+  if(provider==="custom"){
+    const base=($("endpoint").value.trim()||"https://api.openai.com/v1").replace(/\/+$/,"");
+    url=base+"/chat/completions";
+  }
+  const model=provider==="custom"?($("customModel").value.trim()||"custom"):$("model").value;
+  const headers={"Content-Type":"application/json","Authorization":`Bearer ${key}`};
+  if(provider==="openrouter"){
+    headers["HTTP-Referer"]=location.href;
+    headers["X-Title"]="Square Dude AI";
+  }
+  const body={
+    model,
+    messages:[
+      {role:"system",content:"You are a deterministic kinematic controller. Follow the JSON schema exactly."},
+      {role:"user",content:prompt}
+    ],
+    temperature:.2
+  };
+  const res=await fetch(url,{method:"POST",headers,body:JSON.stringify(body),signal});
+  const text=await res.text();
+  if(!res.ok)throw new Error(`HTTP ${res.status}: ${text.slice(0,180)}`);
+  let data;try{data=JSON.parse(text)}catch{throw new Error("Provider returned invalid JSON.")}
+  const content=data?.choices?.[0]?.message?.content;
+  if(typeof content!=="string"||!content.trim())throw new Error("Provider returned no message content.");
+  return content;
+}
+function parseAction(raw){
+  let s=raw.trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
+  const start=s.indexOf("{"),end=s.lastIndexOf("}");
+  if(start>=0&&end>start)s=s.slice(start,end+1);
+  const a=JSON.parse(s);
+  const vec=(v,keys=["x","y","z"])=>Object.fromEntries(keys.map(k=>[k,clamp(Number(v?.[k])||0,-1.2,1.2)]));
+  return {
+    thought:String(a.thought||""),
+    stepDistance:clamp(Number(a.stepDistance)||0,0,.5),
+    rotYOffset:clamp(Number(a.rotYOffset)||0,-.5,.5),
+    torsoTilt:{x:clamp(Number(a.torsoTilt?.x)||0,-1.2,1.2),z:clamp(Number(a.torsoTilt?.z)||0,-1.2,1.2)},
+    leftLeg:vec(a.leftLeg),rightLeg:vec(a.rightLeg),leftArm:vec(a.leftArm),rightArm:vec(a.rightArm),head:vec(a.head)
+  };
+}
+function applyAction(a){
+  const yaw=character.rotation.y+a.rotYOffset;
+  targetPose={
+    head:a.head,leftArm:a.leftArm,rightArm:a.rightArm,leftLeg:a.leftLeg,rightLeg:a.rightLeg,
+    torso:a.torsoTilt,rotY:yaw
+  };
+  state.previousRoot.copy(character.position);
+  const forward=new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
+  character.position.addScaledVector(forward,a.stepDistance);
+  character.position.x=clamp(character.position.x,-20,20);
+  character.position.z=clamp(character.position.z,-20,20);
+  pushHistory();
+}
+async function startLearning(){
+  if(state.learning){stopLearning();return}
+  state.learning=true;$("learnBtn").textContent="Ⅱ Pause learning";setStatus("LEARNING",true);
+  log("Continuous learning started.","ok");
+  while(state.learning){
+    await requestAI();
+    if(!state.learning)break;
+    await new Promise(r=>setTimeout(r,700));
+  }
+}
+function stopLearning(){
+  state.learning=false;
+  if(state.abortController)state.abortController.abort();
+  $("learnBtn").textContent="▶ Start learning";setStatus("SYSTEM READY",false);
+  log("Continuous learning paused.");
+}
+$("learnBtn").onclick=startLearning;
+$("stepBtn").onclick=()=>{if(state.learning)stopLearning();requestAI()};
+$("resetBtn").onclick=()=>{
+  stopLearning();character.position.set(0,1.4,0);character.rotation.set(0,0,0);
+  targetPose={head:{x:0,y:0,z:0},leftArm:{x:0,y:0,z:0},rightArm:{x:0,y:0,z:0},leftLeg:{x:0,y:0,z:0},rightLeg:{x:0,y:0,z:0},torso:{x:0,z:0},rotY:0};
+  applyPose();state.step=0;setTarget(0,-4,false);pushHistory();log("Simulation reset.","ok");toast("Simulation reset");
+};
 
-        // Initialize App on Load
-        window.addEventListener('DOMContentLoaded', () => {
-            init3D();
-            loadSettings();
-        });
+/* ---------- visual settings ---------- */
+$("settingsBtn").onclick=()=>$("modalBackdrop").classList.add("open");
+$("closeSettings").onclick=()=>$("modalBackdrop").classList.remove("open");
+$("modalBackdrop").onclick=e=>{if(e.target===$("modalBackdrop"))$("modalBackdrop").classList.remove("open")};
+$("applySettings").onclick=()=>{
+  const scale=Number($("renderScale").value);
+  renderer.setPixelRatio(Math.min(devicePixelRatio*scale,2));
+  camera.fov=clamp(Number($("fov").value)||50,35,75);camera.updateProjectionMatrix();
+  const gm=$("gridMode").value;grid.visible=gm!=="off";grid.material.opacity=gm==="minimal"?.35:1;grid.material.transparent=gm==="minimal";
+  const sm=$("shadowMode").value;renderer.shadowMap.enabled=true;
+  toast("Visual settings applied");$("modalBackdrop").classList.remove("open");
+};
+addEventListener("keydown",e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="z"){e.preventDefault();e.shiftKey?redo():undo()}
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="y"){e.preventDefault();redo()}
+  if(e.code==="Space"&&document.activeElement.tagName!=="INPUT"&&document.activeElement.tagName!=="SELECT"){e.preventDefault();state.learning?stopLearning():startLearning()}
+});
+
+/* ---------- startup ---------- */
+populateProviders();
+load();
+init3D();
+pushHistory();
+log("System initialized. Viewport ready.","ok");
+log("Click the floor to place a new target.");
+log("AI control is idle. Configure a provider to begin.");
+updateHistoryButtons();
+updateTelemetry(0.016);
   </script>
 </body>
 
