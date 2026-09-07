@@ -1,1 +1,225 @@
-uhhh... nothing here
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Promptforge — multiplayer AI chaos</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ============= APP SHELL ============= -->
+<div id="app">
+
+  <!-- ===== TOP BAR ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2 2 7l10 5 10-5-10-5Z" fill="currentColor" opacity=".25"/>
+        <path d="m2 12 10 5 10-5M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Promptforge</span>
+      <span class="tag">alpha</span>
+    </div>
+    <button id="openSettings" class="iconbtn" title="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" fill="none"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" stroke="currentColor" stroke-width="1.4" fill="none"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ===== LOBBY SCREEN ===== -->
+  <main id="screen-lobby" class="screen">
+    <div class="card center" id="homeCard">
+      <h1>Multiplayer AI chaos.</h1>
+      <p class="sub">Spin up a lobby, write one prompt each, the AI forges a game from them. Play together for 2 minutes.</p>
+
+      <div class="row">
+        <input id="nameInput" class="input" placeholder="your handle" maxlength="16" autocomplete="off" />
+      </div>
+
+      <div class="grid2">
+        <button id="btnHost" class="btn primary">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Host a lobby
+        </button>
+        <div class="joinRow">
+          <input id="codeInput" class="input mono" placeholder="CODE" maxlength="8" autocomplete="off" />
+          <button id="btnJoin" class="btn">
+            <svg viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 1-4.9 12M3 12H11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Join
+          </button>
+        </div>
+      </div>
+
+      <div class="error" id="lobbyError" hidden></div>
+      <div class="hint">No accounts. No servers (yours). P2P via a free broker.</div>
+    </div>
+
+    <div class="card hidden" id="lobbyCard">
+      <div class="cardHead">
+        <div>
+          <div class="lbl">Lobby</div>
+          <div class="codeBox">
+            <span class="code" id="lobbyCode">----</span>
+            <button id="copyCode" class="iconbtn small" title="Copy code">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="badge" id="connBadge">connecting…</div>
+      </div>
+
+      <ul class="players" id="playerList"></ul>
+
+      <div class="cardActions">
+        <button id="btnStart" class="btn primary" disabled>
+          <svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4Z" fill="currentColor"/></svg>
+          Start round
+        </button>
+        <span class="status" id="lobbyStatus">waiting for players…</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== PROMPT SCREEN ===== -->
+  <main id="screen-prompt" class="screen hidden">
+    <div class="card">
+      <div class="cardHead">
+        <div>
+          <div class="lbl">Round</div>
+          <h2 id="roundTitle">Write your prompt</h2>
+        </div>
+        <div class="timer" id="promptTimer">∞</div>
+      </div>
+      <p class="sub" id="promptHint">Describe ONE thing you want in the game. Be specific. Be weird.</p>
+
+      <div class="promptBox">
+        <textarea id="promptInput" placeholder="e.g. A platformer where gravity flips every 10 seconds and you collect glowing orbs while dodging pink cubes…" maxlength="500"></textarea>
+        <div class="counter"><span id="charCount">0</span>/500</div>
+      </div>
+
+      <div class="cardActions">
+        <button id="btnReady" class="btn primary">
+          <svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          I'm ready
+        </button>
+        <span class="status" id="readyStatus"></span>
+      </div>
+
+      <div class="readyDots" id="readyDots"></div>
+    </div>
+  </main>
+
+  <!-- ===== BUILD SCREEN ===== -->
+  <main id="screen-build" class="screen hidden">
+    <div class="card center">
+      <div class="spinner"></div>
+      <h2 id="buildTitle">Forging your game…</h2>
+      <p class="sub" id="buildSub">The AI is patching the world together.</p>
+      <div class="buildLog" id="buildLog"></div>
+    </div>
+  </main>
+
+  <!-- ===== PLAY SCREEN ===== -->
+  <main id="screen-play" class="screen hidden">
+    <div class="playBar">
+      <div class="brand small">
+        <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 7 10 5 10-5M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        <span id="playLobbyCode">----</span>
+      </div>
+      <div class="timer" id="playTimer">2:00</div>
+      <div class="playersInline" id="playPlayers"></div>
+    </div>
+    <iframe id="gameFrame" sandbox="allow-scripts allow-same-origin" title="game"></iframe>
+  </main>
+
+  <!-- ===== RESULTS SCREEN ===== -->
+  <main id="screen-results" class="screen hidden">
+    <div class="card center">
+      <h2>Round over</h2>
+      <p class="sub" id="resultsSub"></p>
+      <div class="actions">
+        <button id="btnPlayAgain" class="btn primary">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Play again
+        </button>
+        <button id="btnLeave" class="btn">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Leave
+        </button>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<!-- ============= SETTINGS MODAL ============= -->
+<div class="modal hidden" id="settingsModal">
+  <div class="modalCard">
+    <div class="cardHead">
+      <h3>AI settings</h3>
+      <button id="closeSettings" class="iconbtn small" title="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <p class="sub">Bring your own OpenRouter key. Stored only in this browser.</p>
+
+    <label class="field">
+      <span>OpenRouter API key</span>
+      <div class="inputWrap">
+        <input id="apiKey" type="password" class="input mono" placeholder="sk-or-…" autocomplete="off" />
+        <button id="toggleKey" class="iconbtn small" title="Show/hide">
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12Z" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
+        </button>
+      </div>
+    </label>
+
+    <label class="field">
+      <span>Model</span>
+      <div class="inputWrap">
+        <input id="modelInput" class="input mono" placeholder="openrouter/auto" />
+        <button id="loadModels" class="iconbtn small" title="Fetch free models">
+          <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <select id="modelSelect" class="input mono" hidden></select>
+    </label>
+
+    <div class="field">
+      <span>Token saver</span>
+      <label class="toggle"><input type="checkbox" id="patchMode" checked /> <span>Patches only (recommended — keeps tokens low)</span></label>
+    </div>
+
+    <div class="cardActions">
+      <button id="saveSettings" class="btn primary">Save</button>
+      <span class="status" id="saveStatus"></span>
+    </div>
+
+    <details class="advanced">
+      <summary>Advanced</summary>
+      <div class="grid2 small">
+        <label class="field">
+          <span>System prompt</span>
+          <textarea id="sysPrompt" class="input mono small"></textarea>
+        </label>
+        <label class="field">
+          <span>Temperature</span>
+          <input id="tempInput" class="input mono" type="number" min="0" max="2" step="0.1" value="0.8" />
+        </label>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- ============= TOAST ============= -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- ============= SCRIPTS ============= -->
+<!-- PeerJS for P2P multiplayer (free public broker) -->
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
