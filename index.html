@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Liquid Plasma Editor - Pro Edition</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <!-- Material Icons Round -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        /* ==========================================================================
+           LIQUID PLASMA & CONVEX GLASS UI SYSTEM
+           ========================================================================== */
+        :root {
+            --plasma-hue-1: 260;
+            --plasma-hue-2: 300;
+            --glass-bg: rgba(25, 20, 35, 0.35);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --accent: #00e5ff;
+            --accent-glow: rgba(0, 229, 255, 0.6);
+            --text-main: #ffffff;
+            --text-muted: #b0b0c5;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #050505;
+            color: var(--text-main);
+            touch-action: none;
+        }
+
+        /* Enhanced Liquid Plasma Background */
+        #plasma-bg {
+            position: fixed;
+            inset: -30%;
+            width: 160%;
+            height: 160%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 30% 30%, hsl(var(--plasma-hue-1), 80%, 20%), transparent 40%),
+                radial-gradient(circle at 70% 60%, hsl(var(--plasma-hue-2), 90%, 15%), transparent 40%),
+                radial-gradient(circle at 40% 80%, hsl(190, 80%, 15%), transparent 50%),
+                #000;
+            filter: blur(70px) contrast(1.3) saturate(1.2);
+            animation: plasmaMorph 25s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+        }
+
+        @keyframes plasmaMorph {
+            0% {
+                transform: scale(1) translate(0, 0) rotate(0deg);
+            }
+
+            33% {
+                transform: scale(1.05) translate(2%, -3%) rotate(2deg);
+            }
+
+            66% {
+                transform: scale(1.1) translate(-2%, 2%) rotate(-2deg);
+                filter: blur(90px) contrast(1.5) saturate(1.4);
+            }
+
+            100% {
+                transform: scale(1.02) translate(-1%, -1%) rotate(1deg);
+            }
+        }
+
+        /* Glass Panel Base */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            /* Specular highlight on edge */
+            border-radius: 20px;
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.6),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+        }
+
+        /* CONVEX LIQUID GLASS BUTTONS (Popping towards the camera) */
+        .liquid-btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            border-radius: 14px;
+            padding: 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            /* Bouncy spring effect */
+
+            /* The 3D convex lighting effect */
+            box-shadow:
+                4px 6px 12px rgba(0, 0, 0, 0.4),
+                /* Drop shadow */
+                inset 2px 2px 4px rgba(255, 255, 255, 0.5),
+                /* Top-left catch light */
+                inset -2px -2px 5px rgba(0, 0, 0, 0.3);
+            /* Bottom-right core shadow */
+        }
+
+        .liquid-btn::before {
+            content: '';
+            position: absolute;
+            top: var(--my, 50%);
+            left: var(--mx, 50%);
+            transform: translate(-50%, -50%);
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        .liquid-btn:hover {
+            transform: translateY(-3px) scale(1.03);
+            /* Pops OUT toward camera */
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow:
+                6px 10px 18px rgba(0, 0, 0, 0.5),
+                inset 2px 3px 5px rgba(255, 255, 255, 0.6),
+                inset -2px -3px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .liquid-btn:hover::before {
+            opacity: 1;
+        }
+
+        .liquid-btn.active {
+            color: #000;
+            background: linear-gradient(135deg, var(--accent) 0%, #0096c7 100%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow:
+                0 8px 20px var(--accent-glow),
+                inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+                inset -2px -2px 5px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        .liquid-btn:active {
+            transform: translateY(1px) scale(0.97);
+            /* Depresses slightly, but retains volume */
+            box-shadow:
+                2px 3px 6px rgba(0, 0, 0, 0.3),
+                inset 1px 1px 3px rgba(255, 255, 255, 0.3),
+                inset -1px -1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .liquid-btn .material-icons-round {
+            font-size: 24px;
+            pointer-events: none;
+        }
+
+        .btn-text {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 0 8px;
+            pointer-events: none;
+        }
+
+        /* ==========================================================================
+           LAYOUT
+           ========================================================================== */
+        #app {
+            display: grid;
+            grid-template-columns: 80px 1fr 320px;
+            grid-template-rows: 70px 1fr;
+            width: 100vw;
+            height: 100vh;
+            padding: 16px;
+            gap: 16px;
+            pointer-events: none;
+        }
+
+        #topbar {
+            grid-column: 1 / 4;
+            grid-row: 1 / 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .top-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .project-title {
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 0.5px;
+            margin: 0 16px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #toolbar {
+            grid-column: 1 / 2;
+            grid-row: 2 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        /* Divider in toolbars */
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            margin: 4px 0;
+            border-radius: 50%;
+        }
+
+        #workspace {
+            grid-column: 2 / 3;
+            grid-row: 2 / 3;
+            position: relative;
+            border-radius: 20px;
+            pointer-events: auto;
+            overflow: hidden;
+            box-shadow:
+                inset 0 0 50px rgba(0, 0, 0, 0.9),
+                0 10px 30px rgba(0, 0, 0, 0.5);
+            background: repeating-conic-gradient(#151515 0% 25%, #1c1c1c 0% 50%) 50% / 30px 30px;
+        }
+
+        #inspector {
+            grid-column: 3 / 4;
+            grid-row: 2 / 3;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* ==========================================================================
+           INSPECTOR & CONTROLS
+           ========================================================================== */
+        .panel-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .panel-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-main);
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .control-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Custom Inputs */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            flex-grow: 1;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #fff;
+            margin-top: -6px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), inset 0 -2px 2px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            background: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        input[type="number"],
+        select {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            width: 80px;
+            font-size: 13px;
+            outline: none;
+            font-weight: 600;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.2s;
+        }
+
+        select {
+            width: 100%;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            border-color: var(--accent);
+        }
+
+        /* Layers Panel */
+        #layers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.05);
+        }
+
+        .layer-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(2px);
+        }
+
+        .layer-item.active {
+            background: linear-gradient(90deg, rgba(0, 229, 255, 0.15), rgba(0, 229, 255, 0.05));
+            border-color: rgba(0, 229, 255, 0.4);
+            box-shadow: inset 2px 0 0 var(--accent);
+        }
+
+        .layer-name {
+            font-size: 13px;
+            flex-grow: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        #file-import {
+            display: none;
+        }
+
+        #webgl-container {
+            display: none;
+        }
+
+        .context-panel {
+            display: none;
+        }
+
+        .context-panel.active {
+            display: flex;
+            animation: slideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="plasma-bg"></div>
+
+    <div id="app">
+        <!-- TOP BAR -->
+        <header id="topbar" class="glass-panel">
+            <div class="top-group">
+                <button class="liquid-btn" onclick="app.history.undo()" title="Undo"><span class="material-icons-round">undo</span></button>
+                <button class="liquid-btn" onclick="app.history.redo()" title="Redo"><span class="material-icons-round">redo</span></button>
+                <div class="divider" style="width: 2px; height: 24px; margin: 0 10px;"></div>
+                <button class="liquid-btn" onclick="app.setCanvasSize()" title="Resize Canvas"><span class="material-icons-round">crop</span></button>
+            </div>
+
+            <div class="project-title">Liquid Canvas Pro</div>
+
+            <div class="top-group">
+                <button class="liquid-btn" onclick="document.getElementById('file-import').click()">
+                    <span class="material-icons-round">add_photo_alternate</span> <span class="btn-text">Import</span>
+                </button>
+                <input type="file" id="file-import" accept="image/png, image/jpeg, image/webp, .glb, .gltf, .obj" multiple>
+
+                <button class="liquid-btn" onclick="app.exportProject()">
+                    <span class="material-icons-round">ios_share</span> <span class="btn-text">Export</span>
+                </button>
+                <button class="liquid-btn" onclick="app.toggleFullscreen()" title="Fullscreen">
+                    <span class="material-icons-round">fullscreen</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- LEFT TOOLBAR -->
+        <aside id="toolbar" class="glass-panel">
+            <button class="liquid-btn tool-btn active" data-tool="select" title="Select / Move">
+                <span class="material-icons-round">pan_tool_alt</span>
+            </button>
+            <button class="liquid-btn tool-btn" data-tool="pan" title="Pan Canvas">
+                <span class="material-icons-round">front_hand</span>
+            </button>
+            <div class="divider"></div>
+            <button class="liquid-btn tool-btn" data-tool="draw" title="Brush">
+                <span class="material-icons-round">brush</span>
+            </button>
+            <button class="liquid-btn tool-btn" data-tool="eraser" title="Eraser">
+                <span class="material-icons-round">auto_fix_high</span>
+            </button>
+            <div class="divider"></div>
+            <button class="liquid-btn tool-btn" data-tool="line" title="Line">
+                <span class="material-icons-round">horizontal_rule</span>
+            </button>
+            <button class="liquid-btn tool-btn" data-tool="arrow" title="Arrow">
+                <span class="material-icons-round">east</span>
+            </button>
+            <button class="liquid-btn tool-btn" data-tool="rect" title="Rectangle">
+                <span class="material-icons-round">rectangle</span>
+            </button>
+            <button class="liquid-btn tool-btn" data-tool="circle" title="Circle">
+                <span class="material-icons-round">circle</span>
+            </button>
+            <button class="liquid-btn tool-btn" data-tool="triangle" title="Triangle">
+                <span class="material-icons-round">change_history</span>
+            </button>
+            <button class="liquid-btn tool-btn" data-tool="star" title="Star">
+                <span class="material-icons-round">star</span>
+            </button>
+            <button class="liquid-btn tool-btn" data-tool="text" title="Text">
+                <span class="material-icons-round">title</span>
+            </button>
+            <div class="divider"></div>
+            <button class="liquid-btn" onclick="app.deleteSelected()" title="Delete">
+                <span class="material-icons-round" style="color: #ff5555;">delete</span>
+            </button>
+        </aside>
+
+        <!-- WORKSPACE (CANVAS) -->
+        <main id="workspace">
+            <canvas id="main-canvas"></canvas>
+        </main>
+
+        <!-- RIGHT INSPECTOR -->
+        <aside id="inspector" class="glass-panel">
+
+            <!-- Global / Canvas Settings -->
+            <div class="panel-section" id="panel-canvas">
+                <div class="panel-title">Canvas Setup</div>
+                <div class="control-row">
+                    <span class="control-label">Background</span>
+                    <input type="color" id="canvas-bg-color" value="#ffffff">
+                </div>
+                <div class="control-row">
+                    <button class="liquid-btn" style="flex: 1;" onclick="app.centerCanvas()">
+                        <span class="material-icons-round" style="margin-right: 5px;">filter_center_focus</span>
+                        <span class="btn-text">Recenter View</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Transform (Shown when object selected) -->
+            <div class="panel-section context-panel" id="panel-transform">
+                <div class="panel-title">Transform</div>
+                <div class="control-row">
+                    <span class="control-label">Opacity</span>
+                    <input type="range" id="obj-opacity" min="0" max="1" step="0.01" value="1">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Angle</span>
+                    <input type="number" id="obj-angle" value="0">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Blend Mode</span>
+                    <select id="obj-blend">
+                        <option value="source-over">Normal</option>
+                        <option value="multiply">Multiply</option>
+                        <option value="screen">Screen</option>
+                        <option value="overlay">Overlay</option>
+                        <option value="darken">Darken</option>
+                        <option value="lighten">Lighten</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Appearance (Shapes/Text/Path) -->
+            <div class="panel-section context-panel" id="panel-appearance">
+                <div class="panel-title">Appearance</div>
+                <div class="control-row">
+                    <span class="control-label">Fill</span>
+                    <input type="color" id="obj-fill" value="#00e5ff">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Stroke</span>
+                    <input type="color" id="obj-stroke" value="#ffffff">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Stroke W.</span>
+                    <input type="range" id="obj-stroke-width" min="0" max="100" value="0">
+                </div>
+            </div>
+
+            <!-- Brush settings (Shown when drawing) -->
+            <div class="panel-section context-panel" id="panel-brush">
+                <div class="panel-title">Brush Settings</div>
+                <div class="control-row">
+                    <span class="control-label">Color</span>
+                    <input type="color" id="brush-color" value="#00e5ff">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Size</span>
+                    <input type="range" id="brush-size" min="1" max="100" value="10">
+                </div>
+            </div>
+
+            <!-- Text Specific -->
+            <div class="panel-section context-panel" id="panel-text">
+                <div class="panel-title">Typography</div>
+                <div class="control-row">
+                    <select id="obj-font">
+                        <option value="Arial">Arial</option>
+                        <option value="Helvetica">Helvetica</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                </div>
+                <div class="control-row" style="justify-content: flex-start; gap: 8px;">
+                    <button class="liquid-btn" onclick="app.updateActiveObject('textAlign', 'left')" style="padding: 6px;"><span class="material-icons-round">format_align_left</span></button>
+                    <button class="liquid-btn" onclick="app.updateActiveObject('textAlign', 'center')" style="padding: 6px;"><span class="material-icons-round">format_align_center</span></button>
+                    <button class="liquid-btn" onclick="app.updateActiveObject('textAlign', 'right')" style="padding: 6px;"><span class="material-icons-round">format_align_right</span></button>
+                </div>
+            </div>
+
+            <!-- Image Filters -->
+            <div class="panel-section context-panel" id="panel-image">
+                <div class="panel-title">Adjustments</div>
+                <div class="control-row">
+                    <span class="control-label">Brightness</span>
+                    <input type="range" id="img-brightness" min="-1" max="1" step="0.05" value="0">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Contrast</span>
+                    <input type="range" id="img-contrast" min="-1" max="1" step="0.05" value="0">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Saturation</span>
+                    <input type="range" id="img-saturation" min="-1" max="1" step="0.05" value="0">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Hue</span>
+                    <input type="range" id="img-hue" min="-1" max="1" step="0.05" value="0">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Blur</span>
+                    <input type="range" id="img-blur" min="0" max="1" step="0.05" value="0">
+                </div>
+            </div>
+
+            <!-- 3D Controls -->
+            <div class="panel-section context-panel" id="panel-3d">
+                <div class="panel-title">3D Transform (Live)</div>
+                <div class="control-row">
+                    <span class="control-label">Rot X</span>
+                    <input type="range" class="3d-control" data-axis="x" min="-3.14" max="3.14" step="0.05" value="0">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Rot Y</span>
+                    <input type="range" class="3d-control" data-axis="y" min="-3.14" max="3.14" step="0.05" value="0">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Rot Z</span>
+                    <input type="range" class="3d-control" data-axis="z" min="-3.14" max="3.14" step="0.05" value="0">
+                </div>
+            </div>
+
+            <!-- Layers Panel -->
+            <div class="panel-section" style="flex-grow: 1;">
+                <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    Layers Stack
+                    <div style="display:flex; gap:8px;">
+                        <button class="liquid-btn" style="padding: 4px;" onclick="app.layerUp()"><span class="material-icons-round" style="font-size:18px;">arrow_upward</span></button>
+                        <button class="liquid-btn" style="padding: 4px;" onclick="app.layerDown()"><span class="material-icons-round" style="font-size:18px;">arrow_downward</span></button>
+                    </div>
+                </div>
+                <div id="layers-list">
+                    <!-- Layer items injected here dynamically -->
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div id="webgl-container"></div>
+
+    <!-- MAIN APP LOGIC -->
+    <script>
+        /**
+         * Liquid Plasma Interactive Light Effect
+         */
+        document.addEventListener('pointermove', (e) => {
+            const buttons = document.querySelectorAll('.liquid-btn');
+            buttons.forEach(btn => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                btn.style.setProperty('--mx', `${x}px`);
+                btn.style.setProperty('--my', `${y}px`);
+            });
+        });
+
+        const app = {
+            canvas: null,
+            currentTool: 'select',
+            isPanning: false,
+            lastPosX: 0,
+            lastPosY: 0,
+            artboardWidth: 1024,
+            artboardHeight: 768,
+            history: {
+                state: [],
+                index: -1,
+                isProcessing: false
+            },
+            ui: {},
+            
+            init() {
+                const workspace = document.getElementById('workspace');
+                this.canvas = new fabric.Canvas('main-canvas', {
+                    width: workspace.clientWidth,
+                    height: workspace.clientHeight,
+                    preserveObjectStacking: true,
+                    selection: true,
+                    isDrawingMode: false,
+                    backgroundColor: 'rgba(0,0,0,0)' 
+                });
+
+                // The virtual Document Artboard
+                this.artboard = new fabric.Rect({
+                    left: workspace.clientWidth / 2 - (this.artboardWidth/2),
+                    top: workspace.clientHeight / 2 - (this.artboardHeight/2),
+                    width: this.artboardWidth,
+                    height: this.artboardHeight,
+                    fill: '#ffffff',
+                    selectable: false,
+                    evented: false,
+                    id: 'artboard',
+                    shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.8)', blur: 40 })
+                });
+                this.canvas.add(this.artboard);
+
+                this.setupUI();
+                this.setupEvents();
+                this.setupCanvasPanZoom();
+                this.setupHistory();
+                this.threeManager.init();
+
+                this.updateLayers();
+                this.saveHistory();
+            },
+
+            setupUI() {
+                this.ui = {
+                    tools: document.querySelectorAll('.tool-btn'),
+                    opacity: document.getElementById('obj-opacity'),
+                    angle: document.getElementById('obj-angle'),
+                    blend: document.getElementById('obj-blend'),
+                    fill: document.getElementById('obj-fill'),
+                    stroke: document.getElementById('obj-stroke'),
+                    strokeW: document.getElementById('obj-stroke-width'),
+                    font: document.getElementById('obj-font'),
+                    brushColor: document.getElementById('brush-color'),
+                    brushSize: document.getElementById('brush-size'),
+                    brightness: document.getElementById('img-brightness'),
+                    contrast: document.getElementById('img-contrast'),
+                    saturation: document.getElementById('img-saturation'),
+                    hue: document.getElementById('img-hue'),
+                    blur: document.getElementById('img-blur'),
+                    panels: {
+                        transform: document.getElementById('panel-transform'),
+                        appearance: document.getElementById('panel-appearance'),
+                        text: document.getElementById('panel-text'),
+                        image: document.getElementById('panel-image'),
+                        model3d: document.getElementById('panel-3d'),
+                        brush: document.getElementById('panel-brush')
+                    },
+                    layers: document.getElementById('layers-list')
+                };
+
+                // Tool selection
+                this.ui.tools.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.ui.tools.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.setTool(btn.dataset.tool);
+                    });
+                });
+
+                // Data Binding
+                this.ui.opacity.oninput = (e) => this.updateActiveObject('opacity', parseFloat(e.target.value));
+                this.ui.angle.oninput = (e) => this.updateActiveObject('angle', parseFloat(e.target.value));
+                this.ui.blend.onchange = (e) => this.updateActiveObject('globalCompositeOperation', e.target.value);
+                this.ui.fill.oninput = (e) => this.updateActiveObject('fill', e.target.value);
+                this.ui.stroke.oninput = (e) => this.updateActiveObject('stroke', e.target.value);
+                this.ui.strokeW.oninput = (e) => this.updateActiveObject('strokeWidth', parseInt(e.target.value));
+                this.ui.font.onchange = (e) => this.updateActiveObject('fontFamily', e.target.value);
+                
+                this.ui.brushColor.oninput = (e) => {
+                    if (this.currentTool === 'draw') {
+                        this.canvas.freeDrawingBrush.color = e.target.value;
+                    }
+                };
+                this.ui.brushSize.oninput = (e) => {
+                    this.canvas.freeDrawingBrush.width = parseInt(e.target.value);
+                };
+
+                // Filter logic
+                const applyFilters = () => {
+                    const obj = this.canvas.getActiveObject();
+                    if (!obj || !obj.filters) return;
+                    
+                    obj.filters[0] = new fabric.Image.filters.Brightness({ brightness: parseFloat(this.ui.brightness.value) });
+                    obj.filters[1] = new fabric.Image.filters.Contrast({ contrast: parseFloat(this.ui.contrast.value) });
+                    obj.filters[2] = new fabric.Image.filters.Saturation({ saturation: parseFloat(this.ui.saturation.value) });
+                    obj.filters[3] = new fabric.Image.filters.HueRotation({ rotation: parseFloat(this.ui.hue.value) });
+                    obj.filters[4] = new fabric.Image.filters.Blur({ blur: parseFloat(this.ui.blur.value) });
+                    
+                    obj.applyFilters();
+                    this.canvas.renderAll();
+                    this.saveHistory(); // Debounce this in a real pro app
+                };
+                this.ui.brightness.onchange = applyFilters;
+                this.ui.contrast.onchange = applyFilters;
+                this.ui.saturation.onchange = applyFilters;
+                this.ui.hue.onchange = applyFilters;
+                this.ui.blur.onchange = applyFilters;
+
+                document.getElementById('file-import').addEventListener('change', (e) => this.handleImport(e));
+                document.getElementById('canvas-bg-color').oninput = (e) => {
+                    this.artboard.set('fill', e.target.value);
+                    this.canvas.renderAll();
+                    this.saveHistory();
+                }
+            },
+
+            setCanvasSize() {
+                const w = prompt("Enter canvas width (px):", this.artboardWidth);
+                const h = prompt("Enter canvas height (px):", this.artboardHeight);
+                if (w && h && !isNaN(w) && !isNaN(h)) {
+                    this.artboardWidth = parseInt(w);
+                    this.artboardHeight = parseInt(h);
+                    this.artboard.set({ width: this.artboardWidth, height: this.artboardHeight });
+                    this.centerCanvas();
+                    this.saveHistory();
+                }
+            },
+
+            setTool(toolName) {
+                this.currentTool = toolName;
+                
+                // Drawing logic
+                if (toolName === 'draw' || toolName === 'eraser') {
+                    this.canvas.isDrawingMode = true;
+                    this.canvas.freeDrawingBrush = new fabric.PencilBrush(this.canvas);
+                    this.canvas.freeDrawingBrush.width = parseInt(this.ui.brushSize.value);
+                    
+                    if (toolName === 'eraser') {
+                        // Use destination-out blend mode to cut out pixels beneath
+                        this.canvas.freeDrawingBrush.color = '#ffffff'; 
+                    } else {
+                        this.canvas.freeDrawingBrush.color = this.ui.brushColor.value;
+                    }
+                } else {
+                    this.canvas.isDrawingMode = false;
+                }
+                
+                this.canvas.defaultCursor = toolName === 'pan' ? 'grab' : 'default';
+                this.canvas.selection = toolName === 'select';
+                
+                this.canvas.getObjects().forEach(obj => {
+                    if (obj.id !== 'artboard') obj.set('selectable', toolName === 'select');
+                });
+                
+                this.hideContextPanels();
+                if (toolName === 'draw' || toolName === 'eraser') {
+                    this.ui.panels.brush.classList.add('active');
+                }
+                
+                // Trigger Add Shapes
+                if (['rect', 'circle', 'triangle', 'star', 'arrow', 'line'].includes(toolName)) {
+                    this.addShape(toolName);
+                } else if (toolName === 'text') {
+                    this.addText();
+                }
+            },
+
+            setupEvents() {
+                this.canvas.on('selection:created', () => this.onObjectSelected());
+                this.canvas.on('selection:updated', () => this.onObjectSelected());
+                this.canvas.on('selection:cleared', () => this.hideContextPanels());
+                
+                this.canvas.on('object:modified', () => {
+                    this.updateInspectorValues();
+                    this.saveHistory();
+                });
+                
+                this.canvas.on('object:added', (e) => {
+                    if (e.target.id !== 'artboard' && !this.history.isProcessing) {
+                        this.updateLayers();
+                        this.saveHistory();
+                    }
+                });
+                
+                this.canvas.on('path:created', (opt) => {
+                    if (this.currentTool === 'eraser') {
+                        opt.path.globalCompositeOperation = 'destination-out';
+                    }
+                    this.updateLayers();
+                    this.saveHistory();
+                });
+                
+                window.addEventListener('resize', () => {
+                    const workspace = document.getElementById('workspace');
+                    this.canvas.setWidth(workspace.clientWidth);
+                    this.canvas.setHeight(workspace.clientHeight);
+                });
+            },
+
+            setupCanvasPanZoom() {
+                this.canvas.on('mouse:down', function(opt) {
+                    const evt = opt.e;
+                    if (app.currentTool === 'pan' || (evt.touches && evt.touches.length === 2)) {
+                        this.isDragging = true;
+                        app.canvas.defaultCursor = 'grabbing';
+                        app.lastPosX = evt.clientX || (evt.touches ? evt.touches[0].clientX : 0);
+                        app.lastPosY = evt.clientY || (evt.touches ? evt.touches[0].clientY : 0);
+                    }
+                });
+
+                this.canvas.on('mouse:move', function(opt) {
+                    if (this.isDragging) {
+                        const e = opt.e;
+                        const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+                        const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+                        
+                        const vpt = this.viewportTransform;
+                        vpt[4] += clientX - app.lastPosX;
+                        vpt[5] += clientY - app.lastPosY;
+                        this.requestRenderAll();
+                        app.lastPosX = clientX;
+                        app.lastPosY = clientY;
+                    }
+                });
+
+                this.canvas.on('mouse:up', function() {
+                    this.isDragging = false;
+                    if(app.currentTool === 'pan') app.canvas.defaultCursor = 'grab';
+                });
+
+                this.canvas.on('mouse:wheel', function(opt) {
+                    const delta = opt.e.deltaY;
+                    let zoom = this.getZoom();
+                    zoom *= 0.999 ** delta;
+                    if (zoom > 10) zoom = 10;
+                    if (zoom < 0.05) zoom = 0.05;
+                    this.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+                    opt.e.preventDefault();
+                    opt.e.stopPropagation();
+                });
+            },
+
+            centerCanvas() {
+                const workspace = document.getElementById('workspace');
+                const vpt = this.canvas.viewportTransform;
+                
+                // Calculate scale to fit artboard in view
+                const scaleX = (workspace.clientWidth - 100) / this.artboardWidth;
+                const scaleY = (workspace.clientHeight - 100) / this.artboardHeight;
+                let scale = Math.min(scaleX, scaleY);
+                if (scale > 1) scale = 1;
+
+                vpt[0] = scale; vpt[3] = scale;
+                vpt[4] = (workspace.clientWidth / 2) - (this.artboardWidth * scale / 2) - (this.artboard.left * scale);
+                vpt[5] = (workspace.clientHeight / 2) - (this.artboardHeight * scale / 2) - (this.artboard.top * scale);
+                
+                this.canvas.requestRenderAll();
+            },
+
+            setupHistory() {
+                this.history.state = [];
+                this.history.index = -1;
+            },
+
+            saveHistory() {
+                if(this.history.isProcessing) return;
+                const json = JSON.stringify(this.canvas.toJSON(['id', 'customType', 'threeData']));
+                if (this.history.index < this.history.state.length - 1) {
+                    this.history.state.splice(this.history.index + 1);
+                }
+                this.history.state.push(json);
+                if(this.history.state.length > 25) this.history.state.shift(); 
+                this.history.index = this.history.state.length - 1;
+            },
+
+            undo() {
+                if (this.history.index > 0) {
+                    this.history.isProcessing = true;
+                    this.history.index -= 1;
+                    this.canvas.loadFromJSON(this.history.state[this.history.index], () => {
+                        this.canvas.renderAll();
+                        this.updateLayers();
+                        this.history.isProcessing = false;
+                        this.rebind3DObjects();
+                    });
+                }
+            },
+
+            redo() {
+                if (this.history.index < this.history.state.length - 1) {
+                    this.history.isProcessing = true;
+                    this.history.index += 1;
+                    this.canvas.loadFromJSON(this.history.state[this.history.index], () => {
+                        this.canvas.renderAll();
+                        this.updateLayers();
+                        this.history.isProcessing = false;
+                        this.rebind3DObjects();
+                    });
+                }
+            },
+            
+            addShape(type) {
+                let shape;
+                const center = this.canvas.getCenter();
+                const defaultOpts = { left: center.left, top: center.top, originX: 'center', originY: 'center', fill: '#00e5ff', strokeWidth: 0 };
+                
+                if (type === 'rect') {
+                    shape = new fabric.Rect({ ...defaultOpts, width: 150, height: 100, rx: 12, ry: 12 });
+                } else if (type === 'circle') {
+                    shape = new fabric.Circle({ ...defaultOpts, radius: 75 });
+                } else if (type === 'triangle') {
+                    shape = new fabric.Triangle({ ...defaultOpts, width: 150, height: 150 });
+                } else if (type === 'line') {
+                    shape = new fabric.Line([0, 0, 200, 0], { ...defaultOpts, stroke: '#00e5ff', strokeWidth: 8, fill: '' });
+                } else if (type === 'arrow') {
+                    // Creating an arrow using a custom path
+                    const pathString = "M 0 10 L 80 10 L 80 0 L 120 20 L 80 40 L 80 30 L 0 30 Z";
+                    shape = new fabric.Path(pathString, { ...defaultOpts, fill: '#00e5ff' });
+                } else if (type === 'star') {
+                    // 5-point star path
+                    const pathString = "M 50 0 L 61 35 L 98 35 L 68 57 L 79 91 L 50 70 L 21 91 L 32 57 L 2 35 L 39 35 Z";
+                    shape = new fabric.Path(pathString, { ...defaultOpts });
+                    shape.scaleToWidth(150);
+                }
+
+                if (shape) {
+                    shape.set('id', 'shape_' + Date.now());
+                    this.canvas.add(shape);
+                    this.canvas.setActiveObject(shape);
+                    this.resetToSelectTool();
+                }
+            },
+
+            addText() {
+                const center = this.canvas.getCenter();
+                const text = new fabric.IText('Double Tap to Edit', {
+                    left: center.left, top: center.top, originX: 'center', originY: 'center',
+                    fontFamily: 'Arial', fill: '#ffffff', fontSize: 48, fontWeight: 'bold'
+                });
+                text.set('id', 'text_' + Date.now());
+                this.canvas.add(text);
+                this.canvas.setActiveObject(text);
+                this.resetToSelectTool();
+            },
+
+            resetToSelectTool() {
+                this.ui.tools.forEach(b => b.classList.remove('active'));
+                document.querySelector('[data-tool="select"]').classList.add('active');
+                this.setTool('select');
+            },
+
+            deleteSelected() {
+                const active = this.canvas.getActiveObjects();
+                if (active.length) {
+                    active.forEach(obj => {
+                        if(obj.id !== 'artboard') this.canvas.remove(obj);
+                    });
+                    this.canvas.discardActiveObject();
+                    this.updateLayers();
+                    this.saveHistory();
+                }
+            },
+
+            onObjectSelected() {
+                this.hideContextPanels();
+                const obj = this.canvas.getActiveObject();
+                if (!obj) return;
+
+                this.ui.panels.transform.classList.add('active');
+                
+                if (obj.type === 'i-text' || obj.type === 'text') {
+                    this.ui.panels.text.classList.add('active');
+                    this.ui.panels.appearance.classList.add('active');
+                } else if (obj.type === 'image') {
+                    if (obj.customType === '3d') {
+                        this.ui.panels.model3d.classList.add('active');
+                    } else {
+                        this.ui.panels.image.classList.add('active');
+                    }
+                    this.ui.panels.appearance.classList.add('active'); 
+                } else {
+                    this.ui.panels.appearance.classList.add('active');
+                }
+                
+                this.updateInspectorValues();
+                this.updateLayerSelection();
+            },
+            
+            updateInspectorValues() {
+                const obj = this.canvas.getActiveObject();
+                if(!obj) return;
+                
+                this.ui.opacity.value = obj.opacity !== undefined ? obj.opacity : 1;
+                this.ui.angle.value = Math.round(obj.angle || 0);
+                this.ui.blend.value = obj.globalCompositeOperation || 'source-over';
+                
+                if(obj.fill && typeof obj.fill === 'string') this.ui.fill.value = obj.fill;
+                if(obj.stroke && typeof obj.stroke === 'string') this.ui.stroke.value = obj.stroke;
+                if(obj.strokeWidth !== undefined) this.ui.strokeW.value = obj.strokeWidth;
+                
+                if(obj.type === 'i-text' && obj.fontFamily) {
+                    this.ui.font.value = obj.fontFamily;
+                }
+                
+                if(obj.customType === '3d' && obj.threeData) {
+                    document.querySelector('.3d-control[data-axis="x"]').value = obj.threeData.rotX || 0;
+                    document.querySelector('.3d-control[data-axis="y"]').value = obj.threeData.rotY || 0;
+                    document.querySelector('.3d-control[data-axis="z"]').value = obj.threeData.rotZ || 0;
+                }
+            },
+
+            updateActiveObject(prop, value) {
+                const obj = this.canvas.getActiveObject();
+                if(obj) {
+                    obj.set(prop, value);
+                    this.canvas.renderAll();
+                    this.saveHistory();
+                }
+            },
+
+            hideContextPanels() {
+                Object.values(this.ui.panels).forEach(p => p.classList.remove('active'));
+            },
+
+            updateLayers() {
+                this.ui.layers.innerHTML = '';
+                const objects = this.canvas.getObjects();
+                
+                for (let i = objects.length - 1; i >= 0; i--) {
+                    const obj = objects[i];
+                    if(obj.id === 'artboard') continue;
+
+                    const div = document.createElement('div');
+                    div.className = 'layer-item';
+                    if (this.canvas.getActiveObject() === obj) div.classList.add('active');
+                    
+                    let icon = 'layers';
+                    let name = 'Layer';
+                    if(obj.type === 'image') { icon = 'image'; name = obj.customType === '3d' ? '3D Model' : 'Image'; }
+                    else if(obj.type === 'i-text') { icon = 'title'; name = obj.text.substring(0,12) || 'Text'; }
+                    else if(obj.type === 'rect') { icon = 'rectangle'; name = 'Rectangle'; }
+                    else if(obj.type === 'circle') { icon = 'circle'; name = 'Circle'; }
+                    else if(obj.type === 'triangle') { icon = 'change_history'; name = 'Triangle'; }
+                    else if(obj.type === 'line') { icon = 'horizontal_rule'; name = 'Line'; }
+                    else if(obj.type === 'path') { icon = obj.globalCompositeOperation === 'destination-out' ? 'auto_fix_high' : 'draw'; name = obj.globalCompositeOperation === 'destination-out' ? 'Eraser Stroke' : 'Shape / Stroke'; }
+
+                    div.innerHTML = `
+                        <span class="material-icons-round" style="font-size: 20px; color: var(--accent);">${icon}</span>
+                        <span class="layer-name">${name}</span>
+                        <span class="material-icons-round" style="font-size: 18px; color: var(--text-muted);" onclick="app.toggleLayerVisibility(${i}, event)">
+                            ${obj.visible !== false ? 'visibility' : 'visibility_off'}
+                        </span>
+                    `;
+                    div.onclick = () => {
+                        this.canvas.setActiveObject(obj);
+                        this.canvas.renderAll();
+                        this.onObjectSelected();
+                    };
+                    this.ui.layers.appendChild(div);
+                }
+            },
+
+            updateLayerSelection() {
+                const active = this.canvas.getActiveObject();
+                const items = this.ui.layers.querySelectorAll('.layer-item');
+                items.forEach(i => i.classList.remove('active'));
+                
+                const objects = this.canvas.getObjects().filter(o => o.id !== 'artboard');
+                const reversedIndex = objects.length - 1 - objects.indexOf(active);
+                
+                if (reversedIndex >= 0 && items[reversedIndex]) {
+                    items[reversedIndex].classList.add('active');
+                }
+            },
+
+            toggleLayerVisibility(index, e) {
+                e.stopPropagation();
+                const obj = this.canvas.item(index);
+                if(obj) {
+                    obj.set('visible', !obj.visible);
+                    this.canvas.discardActiveObject();
+                    this.canvas.renderAll();
+                    this.updateLayers();
+                    this.saveHistory();
+                }
+            },
+
+            layerUp() {
+                const obj = this.canvas.getActiveObject();
+                if(obj && obj.id !== 'artboard') {
+                    obj.bringForward();
+                    this.canvas.renderAll();
+                    this.updateLayers();
+                    this.saveHistory();
+                }
+            },
+            
+            layerDown() {
+                const obj = this.canvas.getActiveObject();
+                if(obj && obj.id !== 'artboard') {
+                    const index = this.canvas.getObjects().indexOf(obj);
+                    if(index > 1) { 
+                        obj.sendBackwards();
+                        this.canvas.renderAll();
+                        this.updateLayers();
+                        this.saveHistory();
+                    }
+                }
+            },
+
+            handleImport(e) {
+                const files = e.target.files;
+                if (!files.length) return;
+
+                Array.from(files).forEach(file => {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const url = URL.createObjectURL(file);
+
+                    if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
+                        fabric.Image.fromURL(url, (img) => {
+                            if (img.width > 1500) img.scaleToWidth(1500);
+                            
+                            const center = this.canvas.getCenter();
+                            img.set({ left: center.left, top: center.top, originX: 'center', originY: 'center', id: 'img_' + Date.now() });
+                            this.canvas.add(img);
+                            this.canvas.setActiveObject(img);
+                            this.resetToSelectTool();
+                            this.saveHistory();
+                        });
+                    } else if (['glb', 'gltf'].includes(ext)) {
+                        this.threeManager.loadModel(url);
+                    }
+                });
+            },
+
+            exportProject() {
+                const originalVpt = [...this.canvas.viewportTransform];
+                this.canvas.setViewportTransform([1,0,0,1,0,0]);
+                
+                const art = this.artboard;
+                const dataURL = this.canvas.toDataURL({
+                    format: 'png',
+                    multiplier: 2, /* Export in High Res */
+                    left: art.left,
+                    top: art.top,
+                    width: art.width,
+                    height: art.height
+                });
+                
+                this.canvas.setViewportTransform(originalVpt);
+                
+                const a = document.createElement('a');
+                a.href = dataURL;
+                a.download = 'LiquidCanvas_Pro_Export.png';
+                a.click();
+            },
+
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {});
+                } else {
+                    document.exitFullscreen();
+                }
+            },
+
+            // --- 3D Rasterization Engine ---
+            threeManager: {
+                scene: null, camera: null, renderer: null, currentModel: null, activeFabricProxy: null,
+
+                init() {
+                    const container = document.getElementById('webgl-container');
+                    this.scene = new THREE.Scene();
+                    this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+                    this.camera.position.z = 5;
+
+                    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+                    this.renderer.setSize(1024, 1024); 
+                    container.appendChild(this.renderer.domElement);
+
+                    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+                    this.scene.add(ambient);
+                    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+                    dirLight.position.set(5, 10, 7);
+                    this.scene.add(dirLight);
+
+                    document.querySelectorAll('.3d-control').forEach(el => {
+                        el.addEventListener('input', (e) => {
+                            if(!this.currentModel || !this.activeFabricProxy) return;
+                            const axis = e.target.dataset.axis;
+                            const val = parseFloat(e.target.value);
+                            this.currentModel.rotation[axis] = val;
+                            this.activeFabricProxy.threeData[`rot${axis.toUpperCase()}`] = val;
+                            this.forceRender();
+                        });
+                        el.addEventListener('change', () => app.saveHistory());
+                    });
+                },
+
+                loadModel(url) {
+                    const loader = new THREE.GLTFLoader();
+                    loader.load(url, (gltf) => {
+                        if (this.currentModel) this.scene.remove(this.currentModel);
+                        this.currentModel = gltf.scene;
+                        
+                        const box = new THREE.Box3().setFromObject(this.currentModel);
+                        const size = box.getSize(new THREE.Vector3()).length();
+                        const center = box.getCenter(new THREE.Vector3());
+                        
+                        this.currentModel.position.x += (this.currentModel.position.x - center.x);
+                        this.currentModel.position.y += (this.currentModel.position.y - center.y);
+                        this.currentModel.position.z += (this.currentModel.position.z - center.z);
+                        this.currentModel.scale.setScalar(3 / size); 
+                        
+                        this.scene.add(this.currentModel);
+                        this.createFabricProxy();
+                    }, undefined, (error) => {
+                        alert("Error loading 3D Model.");
+                    });
+                },
+
+                createFabricProxy() {
+                    this.renderer.render(this.scene, this.camera);
+                    const dataUrl = this.renderer.domElement.toDataURL('image/png');
+                    
+                    fabric.Image.fromURL(dataUrl, (img) => {
+                        const center = app.canvas.getCenter();
+                        img.set({ 
+                            left: center.left, top: center.top, originX: 'center', originY: 'center',
+                            customType: '3d',
+                            threeData: { rotX: 0, rotY: 0, rotZ: 0 }
+                        });
+                        img.set('id', '3d_' + Date.now());
+                        
+                        app.canvas.add(img);
+                        app.canvas.setActiveObject(img);
+                        this.activeFabricProxy = img;
+                        app.resetToSelectTool();
+                        app.saveHistory();
+                    });
+                },
+
+                forceRender() {
+                    if (!this.currentModel || !this.activeFabricProxy) return;
+                    this.renderer.render(this.scene, this.camera);
+                    
+                    const dataUrl = this.renderer.domElement.toDataURL('image/png');
+                    this.activeFabricProxy.setSrc(dataUrl, () => {
+                        app.canvas.renderAll();
+                    });
+                }
+            },
+
+            rebind3DObjects() {
+                const active = this.canvas.getActiveObject();
+                if (active && active.customType === '3d') {
+                    this.threeManager.activeFabricProxy = active;
+                }
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+
+</html>
