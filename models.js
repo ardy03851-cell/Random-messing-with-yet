@@ -7,7 +7,7 @@ export const models = [
     provider: "Moonshot AI",
     description: "Advanced reasoning and code generation with long context support.",
     apiKey: "sk-wj92IoUrzPk_2zD9av5nWA",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    endpoint: "https://api.anyapi.ai/v1/chat/completions",
     badge: "Active Key",
     // Custom SVG Logo for Moonshot AI
     logoSvg: `
