@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevTerminal AI</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Header Bar -->
+    <header class="header">
+      <div class="brand-container">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" class="terminal-svg">
+            <path d="M5 8L10 12L5 16" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13 16H18" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">DEV_TERMINAL</span>
+          <span class="brand-subtitle">AI Code Interface</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Model Selector Anchor (Populated via JS) -->
+      <div id="model-selector-container"></div>
+    </header>
+
+    <!-- Main Workspace / Chat Stream -->
+    <main class="chat-viewport" id="chat-viewport">
+      <div class="welcome-banner" id="welcome-banner">
+        <div class="welcome-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00E599" stroke-width="1.8">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+        </div>
+        <h2>Ready for Code Generation</h2>
+        <p>Select a target model above and enter your engineering prompt to begin.</p>
+      </div>
+      
+      <div class="messages-list" id="messages-list"></div>
+    </main>
+
+    <!-- Input Box Bar -->
+    <footer class="input-container">
+      <form id="chat-form" class="chat-form">
+        <div class="input-wrapper">
+          <textarea 
+            id="user-prompt" 
+            placeholder="Ask a coding question or paste code snippet (e.g. Write a Python script to parse JSON)..." 
+            rows="1"
+            required
+          ></textarea>
+          <button type="submit" id="send-btn" class="send-btn" title="Send Request">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </form>
+      <div class="footer-meta">
+        <span>Powered by OpenRouter API</span>
+        <button id="clear-chat" class="clear-btn">Clear Workspace</button>
+      </div>
+    </footer>
+
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
