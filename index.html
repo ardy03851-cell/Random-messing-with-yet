@@ -1,22 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#030508" />
   <title>DevTerminal AI</title>
+
+  <!-- Premium Typography: Inter for UI, JetBrains Mono for Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Lucide Icons: Crisp, professional, consistent iconography -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Inline overrides to map new fonts to the CSS variables seamlessly */
+    :root {
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    }
+  </style>
 </head>
+
 <body>
   <div class="app-container">
-    
-    <!-- Top Header Bar -->
+
+    <!-- =========================================
+         TOP HEADER BAR
+         ========================================= -->
     <header class="header">
       <div class="brand-container">
         <div class="brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" class="terminal-svg">
-            <path d="M5 8L10 12L5 16" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M13 16H18" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
+          <!-- Lucide Icon: Terminal -->
+          <i data-lucide="terminal" class="terminal-svg"></i>
         </div>
         <div class="brand-text">
           <span class="brand-title">DEV_TERMINAL</span>
@@ -24,52 +46,194 @@
         </div>
       </div>
 
-      <!-- Dynamic Model Selector Anchor (Populated via JS) -->
-      <div id="model-selector-container"></div>
+      <!-- Dynamic Model Selector -->
+      <div class="model-dropdown-wrapper" id="model-dropdown-wrapper">
+        <button class="model-trigger-btn glass-panel" id="model-trigger" aria-haspopup="true" aria-expanded="false">
+          <i data-lucide="cpu" style="width: 16px; height: 16px;"></i>
+          <span id="current-model-name">Claude 3.5 Sonnet</span>
+          <i data-lucide="chevron-down" style="width: 14px; height: 14px; opacity: 0.6;"></i>
+        </button>
+
+        <!-- Dropdown Menu (Populated by JS, but structured here for immediate visual polish) -->
+        <div class="model-menu" id="model-menu" role="menu">
+          <div class="model-item active" role="menuitem" data-model="claude-3-5-sonnet">
+            <i data-lucide="sparkles" style="width: 16px; height: 16px; color: var(--accent-cyan); margin-top: 2px;"></i>
+            <div class="model-info">
+              <div class="model-header">
+                <span class="model-name">Claude 3.5 Sonnet</span>
+                <span class="model-badge">Recommended</span>
+              </div>
+              <div class="model-desc">Best for complex reasoning, coding, and nuanced tasks.</div>
+            </div>
+          </div>
+
+          <div class="model-item" role="menuitem" data-model="gpt-4o">
+            <i data-lucide="zap" style="width: 16px; height: 16px; color: var(--text-muted); margin-top: 2px;"></i>
+            <div class="model-info">
+              <div class="model-header">
+                <span class="model-name">GPT-4o</span>
+                <span class="model-badge">Fast</span>
+              </div>
+              <div class="model-desc">Optimized for speed and real-time conversational flow.</div>
+            </div>
+          </div>
+
+          <div class="model-item" role="menuitem" data-model="deepseek-coder">
+            <i data-lucide="code-2" style="width: 16px; height: 16px; color: var(--text-muted); margin-top: 2px;"></i>
+            <div class="model-info">
+              <div class="model-header">
+                <span class="model-name">DeepSeek Coder</span>
+                <span class="model-badge">Open Source</span>
+              </div>
+              <div class="model-desc">Specialized in heavy code generation and refactoring.</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </header>
 
-    <!-- Main Workspace / Chat Stream -->
+    <!-- =========================================
+         MAIN WORKSPACE / CHAT STREAM
+         ========================================= -->
     <main class="chat-viewport" id="chat-viewport">
+
+      <!-- Welcome Banner (Hidden via JS when first message is sent) -->
       <div class="welcome-banner" id="welcome-banner">
         <div class="welcome-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#00E599" stroke-width="1.8">
-            <polyline points="16 18 22 12 16 6"></polyline>
-            <polyline points="8 6 2 12 8 18"></polyline>
-          </svg>
+          <i data-lucide="sparkles" style="width: 28px; height: 28px; color: var(--accent-cyan);"></i>
         </div>
         <h2>Ready for Code Generation</h2>
-        <p>Select a target model above and enter your engineering prompt to begin.</p>
+        <p>Select a target model above and enter your engineering prompt to begin. <br>Supports Markdown, syntax highlighting, and complex logic.
+        </p>
       </div>
-      
+
+      <!-- Messages will be injected here by app.js -->
       <div class="messages-list" id="messages-list"></div>
+
     </main>
 
-    <!-- Input Box Bar -->
+    <!-- =========================================
+         INPUT BOX BAR
+         ========================================= -->
     <footer class="input-container">
       <form id="chat-form" class="chat-form">
-        <div class="input-wrapper">
-          <textarea 
-            id="user-prompt" 
-            placeholder="Ask a coding question or paste code snippet (e.g. Write a Python script to parse JSON)..." 
+        <div class="input-wrapper glass-panel">
+
+          <!-- Optional Attachment Button (Premium UI touch) -->
+          <button type="button" class="attach-btn" title="Attach file or code snippet" aria-label="Attach file">
+            <i data-lucide="paperclip" style="width: 18px; height: 18px;"></i>
+          </button>
+
+          <textarea
+            id="user-prompt"
+            class="chat-textarea"
+            placeholder="Ask a coding question or paste a code snippet..."
             rows="1"
             required
+            aria-label="Chat input"
           ></textarea>
-          <button type="submit" id="send-btn" class="send-btn" title="Send Request">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
+
+          <button type="submit" id="send-btn" class="send-btn" title="Send Request" aria-label="Send message" disabled>
+            <i data-lucide="arrow-up" style="width: 20px; height: 20px;"></i>
           </button>
         </div>
       </form>
+
       <div class="footer-meta">
-        <span>Powered by OpenRouter API</span>
-        <button id="clear-chat" class="clear-btn">Clear Workspace</button>
+        <span class="meta-left">
+          <i data-lucide="shield-check" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
+          Powered by OpenRouter API
+        </span>
+        <button id="clear-chat" class="clear-btn" type="button">
+          <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
+          Clear Workspace
+        </button>
       </div>
     </footer>
 
   </div>
 
+  <!-- =========================================
+       UI INTERACTION SCRIPTS
+       ========================================= -->
+  <script>
+    // 1. Initialize Lucide Icons
+    lucide.createIcons();
+
+    // 2. Premium Textarea Auto-Resize Logic
+    const textarea = document.getElementById('user-prompt');
+    const sendBtn = document.getElementById('send-btn');
+
+    textarea.addEventListener('input', function() {
+      // Reset height to auto to correctly calculate shrinkage
+      this.style.height = 'auto';
+      // Set new height based on scrollHeight, capped by CSS max-height
+      this.style.height = Math.min(this.scrollHeight, 180) + 'px';
+      
+      // Enable/disable send button based on content
+      sendBtn.disabled = this.value.trim() === '';
+      sendBtn.style.opacity = this.value.trim() === '' ? '0.5' : '1';
+    });
+
+    // 3. Model Dropdown Toggle Logic
+    const modelTrigger = document.getElementById('model-trigger');
+    const modelMenu = document.getElementById('model-menu');
+    const currentModelName = document.getElementById('current-model-name');
+
+    modelTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = modelMenu.classList.contains('open');
+      
+      if (isOpen) {
+        modelMenu.classList.remove('open');
+        modelTrigger.setAttribute('aria-expanded', 'false');
+      } else {
+        modelMenu.classList.add('open');
+        modelTrigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!modelTrigger.contains(e.target) && !modelMenu.contains(e.target)) {
+        modelMenu.classList.remove('open');
+        modelTrigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Handle model selection
+    document.querySelectorAll('.model-item').forEach(item => {
+      item.addEventListener('click', function() {
+        // Update active state
+        document.querySelectorAll('.model-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Update trigger text
+        const modelName = this.querySelector('.model-name').textContent;
+        currentModelName.textContent = modelName;
+        
+        // Close menu
+        modelMenu.classList.remove('open');
+        modelTrigger.setAttribute('aria-expanded', 'false');
+        
+        // Re-render icons in case of dynamic changes
+        lucide.createIcons();
+      });
+    });
+
+    // 4. Clear Chat Logic
+    document.getElementById('clear-chat').addEventListener('click', () => {
+      document.getElementById('messages-list').innerHTML = '';
+      document.getElementById('welcome-banner').style.display = 'block';
+      textarea.value = '';
+      textarea.style.height = 'auto';
+      sendBtn.disabled = true;
+      sendBtn.style.opacity = '0.5';
+    });
+  </script>
+
+  <!-- Your main app logic -->
   <script type="module" src="app.js"></script>
 </body>
+
 </html>
