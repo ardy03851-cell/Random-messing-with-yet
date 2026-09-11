@@ -18,7 +18,7 @@ export const models = [
 
     // Official Kimi brand asset from Kimi's Brand Book.
     logoUrl:
-      "https://favicon.run/favicon?domain=www.kimi.com&sz=32"
+      "https://www.kimi.com/favicon.ico"
   },
 
   {
@@ -35,7 +35,7 @@ export const models = [
 
     // Official DeepSeek logo from their official GitHub repository.
     logoUrl:
-      "https://favicon.run/favicon?domain=www.deepseek.com&sz=32"
+      "https://deepseek.com/favicon.ico"
   },
 
   {
@@ -69,6 +69,6 @@ export const models = [
 
     // Official Anthropic website favicon/logo asset.
     logoUrl:
-      "https://commons.wikimedia.org/wiki/File:Claude_AI_symbol.svg"
+      "https://claude.com/favicon.ico"
   }
 ];
