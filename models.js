@@ -70,5 +70,21 @@ export const models = [
     // Official Anthropic website favicon/logo asset.
     logoUrl:
       "https://claude.com/favicon.ico"
-  }
+  },
+
+  {
+    id: "gpt-5-image",
+    name: "gpt image 5",
+    provider: "OpenAi",
+    description:
+      "Advanced chat gpt model with abilities to generate very cool images.",
+
+    apiKey: "sk-FduyAYaSO440p08Zs1QJuw",
+    endpoint: "https://api.anyapi.ai/v1/chat/completions",
+
+    badge: "Active Key",
+
+    // Official Anthropic website favicon/logo asset.
+    logoUrl:
+      "https://chatgpt.com/favicon.ico"   
 ];
