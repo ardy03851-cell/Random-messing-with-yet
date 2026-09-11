@@ -71,4 +71,21 @@ export const models = [
     logoUrl:
       "https://claude.com/favicon.ico"
   },
+ 
+  {
+    id: "openai/gpt-5-image",
+    name: "GPT-5image",
+    provider: "OpenAI",
+    description:
+      "Multimodal OpenAI model capable of advanced reasoning and coding.",
+
+    apiKey: "sk-pQaB6YJBaSgpEKHOcWZSFQ",
+    endpoint: "https://api.anyapi.ai/v1/chat/completions",
+
+    badge: "Active Key",
+
+    // Official OpenAI website favicon/logo asset.
+    logoUrl:
+      "https://favicon.run/favicon?domain=www.chatgpt.com&sz=32"
+  }, 
 ];
