@@ -40,7 +40,7 @@ export const models = [
 
   {
     id: "openai/gpt-5-image",
-    name: "GPT-5image",
+    name: "gpt-5-image",
     provider: "OpenAI",
     description:
       "Multimodal OpenAI model capable of advanced reasoning and coding.",
