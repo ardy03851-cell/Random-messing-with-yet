@@ -17,7 +17,8 @@ export const models = [
     badge: "Active Key",
 
     // Official Kimi brand asset from Kimi's Brand Book.
-    logoUrl:
+    logoUrl: "/icons/kimi.png",
+    fallbackUrl:
       "https://kimi-file.kimi.ai/prod-chat-kimi/kfs/4/2/2026-08-12/1d9u61l6dcmosb3skrhr0?x-tos-process=image%2Fauto-orient%2C1%2Fstrip%2Fignore-error%2C1"
   },
 
