@@ -69,6 +69,6 @@ export const models = [
 
     // Official Anthropic website favicon/logo asset.
     logoUrl:
-      "https://img.icons8.com/?size=100&id=RaW9M9aTjsqW&format=png&color=000000"
+      "https://img.icons8.com/?size=100&id=mYUuhFKoiTmU&format=png&color=000000"
   }
 ];
