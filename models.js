@@ -18,7 +18,7 @@ export const models = [
 
     // Official Kimi brand asset from Kimi's Brand Book.
     logoUrl:
-      "https://www.kimi.com/favicon.ico"
+      "https://favicon.run/favicon?domain=ardy03851-cell.github.io&sz=256"
   },
 
   {
