@@ -5,10 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#03040a" />
-  <title>Calyx</title>
+  <title>Calyx</title>
   <link rel="icon" type="image/png" href="web.png" />
-  
-  <style>
+
+  <style>
     :root {
       --bg: #020309;
       --panel: rgba(13, 16, 29, .78);
@@ -277,50 +277,6 @@
       height: 20px
     }
 
-    .typing {
-      display: flex;
-      gap: 5px;
-      padding: 8px 0
-    }
-
-    .typing i {
-      width: 5px;
-      height: 5px;
-      background: #9da8ff;
-      border-radius: 50%;
-      animation: b 1s infinite
-    }
-
-    .typing i:nth-child(2) {
-      animation-delay: .15s
-    }
-
-    .typing i:nth-child(3) {
-      animation-delay: .3s
-    }
-
-    @keyframes b {
-      50% {
-        opacity: .25;
-        transform: translateY(-3px)
-      }
-    }
-
-    .spinner-3d-wrap {
-      width: 76px;
-      height: 76px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .spinner-3d-wrap canvas {
-      width: 100% !important;
-      height: 100% !important;
-      display: block;
-    }
-
     .code-card {
       margin-top: 14px;
       border: 1px solid rgba(110, 129, 255, .20);
@@ -474,12 +430,20 @@
       font-size: 13px
     }
 
-    .model-select img,
+    /* Fixed uniform logo sizing styles */
     .model-logo {
-      width: 20px;
-      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      border-radius: 6px;
+    }
+
+    .model-logo img,
+    .model-logo svg {
+      display: block;
       object-fit: contain;
-      border-radius: 6px
     }
 
     .model-name {
@@ -513,6 +477,8 @@
       left: 16px;
       bottom: 78px;
       width: min(340px, calc(100% - 32px));
+      max-height: 360px;
+      overflow-y: auto;
       padding: 8px;
       border-radius: 18px;
       background: rgba(12, 15, 26, .96);
@@ -520,18 +486,28 @@
       box-shadow: 0 25px 80px rgba(0, 0, 0, .65);
       backdrop-filter: blur(25px);
       display: none;
-      z-index: 30
+      z-index: 30;
+      scrollbar-width: thin;
     }
 
     .model-menu.open {
       display: block
     }
 
+    .model-group-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      padding: 10px 11px 4px;
+      font-weight: 700;
+    }
+
     .model-item {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 11px;
+      padding: 9px 11px;
       border-radius: 12px;
       cursor: pointer
     }
@@ -542,13 +518,15 @@
     }
 
     .model-item strong {
-      font-size: 13px
+      font-size: 13px;
+      display: block;
     }
 
     .model-item small {
       display: block;
       color: #727991;
-      margin-top: 2px
+      margin-top: 1px;
+      font-size: 11px;
     }
 
     .model-item .badge {
@@ -557,7 +535,8 @@
       color: #9fa8d2;
       border: 1px solid var(--line);
       padding: 4px 6px;
-      border-radius: 7px
+      border-radius: 7px;
+      flex-shrink: 0;
     }
 
     .workspace {
@@ -696,11 +675,11 @@
       </div>
       <div class="top-actions">
         <button class="icon-btn" id="newChat" title="New chat" aria-label="New chat">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
         <button class="icon-btn" id="closeWorkspace" title="Close code" aria-label="Close code" style="display:none">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
       </div>
     </header>
 
@@ -730,18 +709,18 @@
               <div class="composer-row">
                 <div class="left-tools">
                   <button class="model-select" id="modelSelect" type="button" aria-label="Choose AI model">
-                  <span id="selectedLogo"></span>
-                  <span class="model-name" id="selectedModel">Loading models…</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </button>
+                    <span id="selectedLogo"></span>
+                    <span class="model-name" id="selectedModel">Loading models…</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  </button>
                 </div>
                 <div class="right-tools">
                   <button class="icon-btn" id="clearPrompt" title="Clear" aria-label="Clear prompt">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                </button>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                  </button>
                   <button class="send" id="send" title="Send" aria-label="Send">
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5.5 20 12 4 18.5l2.4-5.8L14 12l-7.6-.7L4 5.5Z" fill="white"/></svg>
-                </button>
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5.5 20 12 4 18.5l2.4-5.8L14 12l-7.6-.7L4 5.5Z" fill="white"/></svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -753,8 +732,8 @@
         <div class="workspace-head">
           <div class="workspace-title"><span class="file-dot"></span><span id="fileName">index.html</span></div>
           <button class="icon-btn" id="copyCode" title="Copy code" aria-label="Copy code">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.7"/></svg>
-        </button>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.7"/></svg>
+          </button>
         </div>
         <div class="workspace-body">
           <div class="line-nos" id="lineNos">1</div>
@@ -774,25 +753,11 @@
     }
   </script>
   <script type="module">
-    /*
-    Forge is intentionally connected to models.js rather than duplicating a model list here.
-
-    Keep models.js beside this file:
-      /index.html
-      /models.js
-
-    Adding a model to models.js automatically adds it to the model picker.
-  */
-  import * as THREE from 'three';
+    import * as THREE from 'three';
   import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
   import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
   import { models } from "./models.js";
 
-  // =============================================================
-  // MODEL ID TO 3D MODEL (.obj) MAPPING
-  // Type your exact model IDs (from models.js) and their .obj files here.
-  // Place all .obj files inside the "models" folder.
-  // =============================================================
   const MODEL_3D_MAP = {
     "gpt-4o": "models/gpt-4o.obj",
     "moonshotai/kimi-k3": "models/kimi.obj",
@@ -804,7 +769,6 @@
   };
 
   const $ = id => document.getElementById(id);
-
   let welcomeOrbCleanup = null;
 
   function load3DModelSpinner(container, modelId) {
@@ -894,6 +858,7 @@
       container.innerHTML = "";
     };
   }
+
   const messages = $("messages");
   const welcome = $("welcome");
   const prompt = $("prompt");
@@ -911,95 +876,130 @@
   let activeModel = models?.[0] || null;
   let latestCode = "";
 
-  function logoElement(model, size = 20){
-    const holder = document.createElement("span");
-    holder.className = "model-logo";
-    holder.style.width = size + "px";
-    holder.style.height = size + "px";
+  // Sized & uniform logo element creator
+  function logoElement(model, size = 20) {
+    const holder = document.createElement("span");
+    holder.className = "model-logo";
+    holder.style.width = size + "px";
+    holder.style.height = size + "px";
 
-    if (model?.logoUrl) {
-      const img = document.createElement("img");
-      img.src = model.logoUrl;
-      img.alt = model.name || "Model logo";
-      img.style.width = "100%";
-      img.style.height = "100%";
-      img.style.objectFit = "contain";
-      img.onerror = () => {
-        if (model.fallbackUrl && img.src !== model.fallbackUrl) {
-          img.src = model.fallbackUrl;
-        } else {
-          holder.innerHTML = model?.logoSvg || `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/></svg>`;
-          const svg = holder.querySelector("svg");
-          if(svg){ svg.setAttribute("width", size); svg.setAttribute("height", size); }
-        }
-      };
-      holder.appendChild(img);
-    } else {
-      holder.innerHTML = model?.logoSvg || `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/></svg>`;
-      const svg = holder.querySelector("svg");
-      if(svg){ svg.setAttribute("width", size); svg.setAttribute("height", size); }
-    }
+    const applyFallback = () => {
+      holder.innerHTML = model?.logoSvg || `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/></svg>`;
+      const svg = holder.querySelector("svg");
+      if (svg) {
+        svg.setAttribute("width", size);
+        svg.setAttribute("height", size);
+        svg.style.width = size + "px";
+        svg.style.height = size + "px";
+      }
+    };
 
-    return holder;
-  }
+    if (model?.logoUrl) {
+      const img = document.createElement("img");
+      img.src = model.logoUrl;
+      img.alt = model.name || "Model logo";
+      img.style.width = size + "px";
+      img.style.height = size + "px";
+      img.style.objectFit = "contain";
+      img.onerror = () => {
+        if (model.fallbackUrl && img.src !== model.fallbackUrl) {
+          img.src = model.fallbackUrl;
+        } else {
+          applyFallback();
+        }
+      };
+      holder.appendChild(img);
+    } else {
+      applyFallback();
+    }
 
-  function renderModels(){
+    return holder;
+  }
+
+  // Groups models by provider/company cleanly supporting multiple models under the same provider
+  function renderModels() {
     modelMenu.innerHTML = "";
-    if(!models.length){
+    if (!models || !models.length) {
       selectedModel.textContent = "No models";
       return;
     }
-    models.forEach((model, index) => {
-      const item = document.createElement("div");
-      item.className = "model-item";
-      item.appendChild(logoElement(model));
-      const info = document.createElement("div");
-      info.style.minWidth = "0";
-      info.innerHTML = `<strong>${escapeHtml(model.name)}</strong><small>${escapeHtml(model.provider || "AI")}</small>`;
-      item.appendChild(info);
-      if(model.badge){
-        const badge = document.createElement("span");
-        badge.className = "badge";
-        badge.textContent = model.badge;
-        item.appendChild(badge);
-      }
-      item.addEventListener("click", () => {
-        activeModel = model;
-        updateSelectedModel();
-        modelMenu.classList.remove("open");
-      });
-      modelMenu.appendChild(item);
-      if(index === 0) activeModel = activeModel || model;
+
+    const groups = {};
+    models.forEach(model => {
+      const provider = model.provider || "AI Provider";
+      if (!groups[provider]) groups[provider] = [];
+      groups[provider].push(model);
     });
+
+    let firstFound = null;
+
+    Object.keys(groups).forEach(providerName => {
+      const header = document.createElement("div");
+      header.className = "model-group-title";
+      header.textContent = providerName;
+      modelMenu.appendChild(header);
+
+      groups[providerName].forEach(model => {
+        if (!firstFound) firstFound = model;
+
+        const item = document.createElement("div");
+        item.className = "model-item";
+        item.appendChild(logoElement(model, 20));
+
+        const info = document.createElement("div");
+        info.style.minWidth = "0";
+        info.innerHTML = `<strong>${escapeHtml(model.name)}</strong><small>${escapeHtml(model.id)}</small>`;
+        item.appendChild(info);
+
+        if (model.badge) {
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = model.badge;
+          item.appendChild(badge);
+        }
+
+        item.addEventListener("click", () => {
+          activeModel = model;
+          updateSelectedModel();
+          modelMenu.classList.remove("open");
+        });
+
+        modelMenu.appendChild(item);
+      });
+    });
+
+    if (!activeModel && firstFound) {
+      activeModel = firstFound;
+    }
     updateSelectedModel();
   }
 
-  function updateSelectedModel(){
-    if(!activeModel) return;
+  function updateSelectedModel() {
+    if (!activeModel) return;
     selectedModel.textContent = activeModel.name;
     selectedLogo.innerHTML = "";
-    selectedLogo.appendChild(logoElement(activeModel));
+    selectedLogo.appendChild(logoElement(activeModel, 20));
 
     const welcomeOrb = $("welcomeOrb");
-    if(welcomeOrb){
-      if(welcomeOrbCleanup) welcomeOrbCleanup();
+    if (welcomeOrb) {
+      if (welcomeOrbCleanup) welcomeOrbCleanup();
       welcomeOrbCleanup = load3DModelSpinner(welcomeOrb, activeModel.id);
     }
   }
 
-  function escapeHtml(value){
+  function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   }
 
-  function addMessage(role, text, code = null, lang = "html"){
+  function addMessage(role, text, code = null, lang = "html") {
     welcome?.remove();
     const row = document.createElement("div");
     row.className = "message " + role;
 
-    if(role === "ai"){
+    if (role === "ai") {
       const avatar = document.createElement("div");
       avatar.className = "avatar";
-      if(activeModel) avatar.appendChild(logoElement(activeModel, 20));
+      if (activeModel) avatar.appendChild(logoElement(activeModel, 20));
       row.appendChild(avatar);
     }
 
@@ -1007,7 +1007,7 @@
     bubble.className = "bubble";
     bubble.innerHTML = formatText(text);
 
-    if(code){
+    if (code) {
       const card = document.createElement("div");
       card.className = "code-card";
       card.innerHTML = `
@@ -1031,37 +1031,37 @@
     return row;
   }
 
-  function formatText(text){
-    return escapeHtml(text)
-      .replace(/```[\s\S]*?```/g, "")
-      .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:14px; margin-top:10px; display:block;" />')
-      .replace(/\n/g, "<br>");
-  }
+  function formatText(text) {
+    return escapeHtml(text)
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:14px; margin-top:10px; display:block;" />')
+      .replace(/\n/g, "<br>");
+  }
 
-  function showWorkspace(code, lang = "html"){
+  function showWorkspace(code, lang = "html") {
     latestCode = code;
     workspace.classList.add("active");
     closeWorkspace.style.display = "grid";
     editor.textContent = code;
     fileName.textContent = lang === "css" ? "styles.css" : lang === "js" || lang === "javascript" ? "script.js" : "index.html";
     const count = Math.max(1, code.split("\n").length);
-    lineNos.textContent = Array.from({length: count}, (_,i) => i + 1).join("\n");
+    lineNos.textContent = Array.from({length: count}, (_, i) => i + 1).join("\n");
   }
 
-  function extractCode(text){
+  function extractCode(text) {
     const match = text.match(/```(?:html|css|javascript|js|typescript|ts|json|jsx|tsx|xml)?\s*\n?([\s\S]*?)```/i);
-    if(!match) return null;
+    if (!match) return null;
     const raw = match[1].trim();
     const first = text.match(/```([a-z0-9+#-]*)/i);
     return { code: raw, lang: first?.[1] || "code" };
   }
 
-  function loadingMessage(){
+  function loadingMessage() {
     const row = document.createElement("div");
     row.className = "message ai";
     const avatar = document.createElement("div");
     avatar.className = "avatar";
-    if(activeModel) avatar.appendChild(logoElement(activeModel,20));
+    if (activeModel) avatar.appendChild(logoElement(activeModel, 20));
     const bubble = document.createElement("div");
     bubble.className = "bubble";
 
@@ -1072,60 +1072,47 @@
     const cleanup = load3DModelSpinner(spinnerWrap, activeModel?.id);
     row._cleanup3D = cleanup;
 
-    row.append(avatar,bubble);
+    row.append(avatar, bubble);
     messages.appendChild(row);
     messages.scrollTop = messages.scrollHeight;
     return row;
   }
 
-  async function askModel(userText){
-    if(!activeModel) throw new Error("No AI model is available in models.js.");
+  async function askModel(userText) {
+    if (!activeModel) throw new Error("No AI model is available in models.js.");
 
     const provider = String(activeModel.provider || "").toLowerCase();
     const isAnthropic = provider.includes("anthropic") || String(activeModel.endpoint).includes("anthropic.com");
     const isImageModel = activeModel.type === "image" || activeModel.isImage || String(activeModel.endpoint).includes("/images/generations");
 
-    if(isImageModel){
-      const body = {
-        model: activeModel.id,
-        prompt: userText,
-        n: 1
-      };
+    if (isImageModel) {
+      const body = { model: activeModel.id, prompt: userText, n: 1 };
       const res = await fetch(activeModel.endpoint, {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "Authorization":"Bearer " + activeModel.apiKey
-        },
-        body:JSON.stringify(body)
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + activeModel.apiKey },
+        body: JSON.stringify(body)
       });
-      if(!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       const img = data?.data?.[0];
       const imgUrl = img?.url || (img?.b64_json ? `data:image/png;base64,${img.b64_json}` : null);
-      if(imgUrl){
-        return `![Generated Image](${imgUrl})`;
-      }
+      if (imgUrl) return `![Generated Image](${imgUrl})`;
       throw new Error("The image model did not return an image.");
     }
 
-    if(isAnthropic){
-      const body = {
-        model: activeModel.id,
-        max_tokens: 4096,
-        messages: [{ role:"user", content:userText }]
-      };
+    if (isAnthropic) {
+      const body = { model: activeModel.id, max_tokens: 4096, messages: [{ role: "user", content: userText }] };
       const res = await fetch(activeModel.endpoint, {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "x-api-key":activeModel.apiKey,
-          "anthropic-version":"2023-06-01",
-          "anthropic-dangerous-direct-browser-access":"true"
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": activeModel.apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
         },
-        body:JSON.stringify(body)
+        body: JSON.stringify(body)
       });
-      if(!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       return data?.content?.map(x => x.text || "").join("") || "The model returned no text.";
     }
@@ -1133,53 +1120,48 @@
     const body = {
       model: activeModel.id,
       messages: [
-        { role:"system", content:
-          "You are an expert software engineer and web game developer. When the user asks for code, provide production-quality code in fenced code blocks. Prefer complete, runnable implementations and explain only what is useful."
-        },
-        { role:"user", content:userText }
+        { role: "system", content: "You are an expert software engineer and web game developer. When the user asks for code, provide production-quality code in fenced code blocks." },
+        { role: "user", content: userText }
       ],
-      temperature:0.35
+      temperature: 0.35
     };
 
     const res = await fetch(activeModel.endpoint, {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer " + activeModel.apiKey
-      },
-      body:JSON.stringify(body)
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + activeModel.apiKey },
+      body: JSON.stringify(body)
     });
-    if(!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     return data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || "The model returned no text.";
   }
 
-  async function submit(){
+  async function submit() {
     const text = prompt.value.trim();
-    if(!text || send.disabled) return;
+    if (!text || send.disabled) return;
 
     addMessage("user", text);
     prompt.value = "";
     send.disabled = true;
     const loading = loadingMessage();
 
-    try{
+    try {
       const answer = await askModel(text);
-      if(loading._cleanup3D) loading._cleanup3D();
+      if (loading._cleanup3D) loading._cleanup3D();
       loading.remove();
 
       const code = extractCode(answer);
-      if(code){
+      if (code) {
         addMessage("ai", answer, code.code, code.lang);
         showWorkspace(code.code, code.lang);
-      }else{
+      } else {
         addMessage("ai", answer);
       }
-    }catch(error){
-      if(loading._cleanup3D) loading._cleanup3D();
+    } catch (error) {
+      if (loading._cleanup3D) loading._cleanup3D();
       loading.remove();
-      addMessage("ai", "I couldn't reach the selected model. Check the endpoint, API key, CORS policy, and model ID in models.js.\n\n" + (error?.message || "Unknown error"));
-    }finally{
+      addMessage("ai", "I couldn't reach the selected model. Check configuration in models.js.\n\n" + (error?.message || "Unknown error"));
+    } finally {
       send.disabled = false;
       prompt.focus();
     }
@@ -1192,7 +1174,7 @@
   document.addEventListener("click", () => modelMenu.classList.remove("open"));
   send.addEventListener("click", submit);
   prompt.addEventListener("keydown", e => {
-    if(e.key === "Enter" && !e.shiftKey){
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       submit();
     }
@@ -1203,7 +1185,7 @@
     closeWorkspace.style.display = "none";
   });
   $("copyCode").addEventListener("click", async () => {
-    if(!latestCode) return;
+    if (!latestCode) return;
     await navigator.clipboard?.writeText(latestCode);
   });
   $("newChat").addEventListener("click", () => {
@@ -1215,7 +1197,7 @@
     updateSelectedModel();
   });
 
-  function welcomeTemplate(){
+  function welcomeTemplate() {
     const el = document.createElement("div");
     el.className = "welcome";
     el.innerHTML = `
