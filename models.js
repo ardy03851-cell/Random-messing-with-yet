@@ -18,7 +18,7 @@ export const models = [
 
     // Official Kimi brand asset from Kimi's Brand Book.
     logoUrl:
-      "https://kimi-file.kimi.ai/prod-chat-kimi/kfs/4/2/2026-08-12/1d9u61l6dcmosb3skrhr0?x-tos-process=image%2Fauto-orient%2C1%2Fstrip%2Fignore-error%2C1"
+      "https://favicon.run/favicon?domain=www.kimi.com&sz=32"
   },
 
   {
@@ -35,7 +35,7 @@ export const models = [
 
     // Official DeepSeek logo from their official GitHub repository.
     logoUrl:
-      "https://www.deepseek.com/favicon.ico"
+      "https://favicon.run/favicon?domain=www.deepseek.com&sz=32"
   },
 
   {
@@ -52,7 +52,7 @@ export const models = [
 
     // Official OpenAI website favicon/logo asset.
     logoUrl:
-      "https://openai.com/favicon.ico"
+      "https://favicon.run/favicon?domain=www.chatgpt.com&sz=32"
   },
 
   {
