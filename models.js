@@ -35,7 +35,7 @@ export const models = [
 
     // Official DeepSeek logo from their official GitHub repository.
     logoUrl:
-      "https://raw.githubusercontent.com/deepseek-ai/DeepSeek-LLM/main/images/logo.svg"
+      "https://www.deepseek.com/favicon.ico" alt="Website Favicon"
   },
 
   {
