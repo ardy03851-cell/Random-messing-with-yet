@@ -1034,10 +1034,11 @@
   }
 
   function formatText(text){
-    return escapeHtml(text)
-      .replace(/```[\s\S]*?```/g, "")
-      .replace(/\n/g, "<br>");
-  }
+    return escapeHtml(text)
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:14px; margin-top:10px; display:block;" />')
+      .replace(/\n/g, "<br>");
+  }
 
   function showWorkspace(code, lang = "html"){
     latestCode = code;
@@ -1084,6 +1085,31 @@
 
     const provider = String(activeModel.provider || "").toLowerCase();
     const isAnthropic = provider.includes("anthropic") || String(activeModel.endpoint).includes("anthropic.com");
+    const isImageModel = activeModel.type === "image" || activeModel.isImage || String(activeModel.endpoint).includes("/images/generations");
+
+    if(isImageModel){
+      const body = {
+        model: activeModel.id,
+        prompt: userText,
+        n: 1
+      };
+      const res = await fetch(activeModel.endpoint, {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer " + activeModel.apiKey
+        },
+        body:JSON.stringify(body)
+      });
+      if(!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      const img = data?.data?.[0];
+      const imgUrl = img?.url || (img?.b64_json ? `data:image/png;base64,${img.b64_json}` : null);
+      if(imgUrl){
+        return `![Generated Image](${imgUrl})`;
+      }
+      throw new Error("The image model did not return an image.");
+    }
 
     if(isAnthropic){
       const body = {
