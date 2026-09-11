@@ -787,6 +787,7 @@
   */
   import * as THREE from 'three';
   import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
   import { models } from "./models.js";
 
   // =============================================================
@@ -809,7 +810,8 @@
 
   function load3DModelSpinner(container, modelId) {
     if (!container) return () => {};
-    const objPath = MODEL_3D_MAP[modelId] || MODEL_3D_MAP["default"] || `models/${modelId || "default"}.obj`;
+    const modelPath = MODEL_3D_MAP[modelId] || MODEL_3D_MAP["default"] || `models/${modelId || "default"}.obj`;
+    const ext = modelPath.split('.').pop().toLowerCase();
 
     const width = container.clientWidth || 76;
     const height = container.clientHeight || 76;
@@ -835,41 +837,45 @@
     scene.add(dirLight);
 
     let loadedMesh = null;
-    const loader = new OBJLoader();
 
-    loader.load(
-      objPath,
-      (obj) => {
-        const box = new THREE.Box3().setFromObject(obj);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z) || 1;
-        const scale = 1.8 / maxDim;
+    const handleSuccess = (object) => {
+      const box = new THREE.Box3().setFromObject(object);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const scale = 1.8 / maxDim;
 
-        obj.position.sub(center.multiplyScalar(scale));
-        obj.scale.set(scale, scale, scale);
+      object.position.sub(center.multiplyScalar(scale));
+      object.scale.set(scale, scale, scale);
 
-        obj.traverse((child) => {
-          if (child.isMesh) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0x8d9cff,
-              metalness: 0.3,
-              roughness: 0.2
-            });
-          }
-        });
+      object.traverse((child) => {
+        if (child.isMesh) {
+          child.material = new THREE.MeshStandardMaterial({
+            color: 0x8d9cff,
+            metalness: 0.3,
+            roughness: 0.2
+          });
+        }
+      });
 
-        loadedMesh = obj;
-        scene.add(obj);
-      },
-      undefined,
-      () => {
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshStandardMaterial({ color: 0x6f82ff });
-        loadedMesh = new THREE.Mesh(geometry, material);
-        scene.add(loadedMesh);
-      }
-    );
+      loadedMesh = object;
+      scene.add(object);
+    };
+
+    const handleError = () => {
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshStandardMaterial({ color: 0x6f82ff });
+      loadedMesh = new THREE.Mesh(geometry, material);
+      scene.add(loadedMesh);
+    };
+
+    if (ext === 'gltf' || ext === 'glb') {
+      const loader = new GLTFLoader();
+      loader.load(modelPath, (gltf) => handleSuccess(gltf.scene), undefined, handleError);
+    } else {
+      const loader = new OBJLoader();
+      loader.load(modelPath, handleSuccess, undefined, handleError);
+    }
 
     let animId;
     function animate() {
