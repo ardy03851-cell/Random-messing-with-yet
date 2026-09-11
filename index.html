@@ -1,929 +1,669 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
-  <meta name="theme-color" content="#05060a" />
-  <title>Forge AI — iPad Coding Studio</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#03040a" />
+  <title>Forge — AI Coding</title>
+
   <style>
     :root {
-      --bg: #04050a;
-      --panel: rgba(13, 16, 27, .72);
-      --panel2: rgba(17, 20, 31, .86);
-      --line: rgba(255, 255, 255, .09);
-      --line2: rgba(255, 255, 255, .14);
-      --text: #f7f8ff;
-      --muted: #9298aa;
-      --soft: #c8cddd;
-      --blue: #558bff;
-      --blue2: #9bc1ff;
-      --cyan: #42d8ff;
-      --glow: 0 0 55px rgba(79, 125, 255, .24);
-      --radius: 22px;
-      --safe-top: env(safe-area-inset-top);
-      --safe-bottom: env(safe-area-inset-bottom);
+      --bg: #020309;
+      --panel: rgba(13, 16, 29, .78);
+      --panel2: rgba(19, 22, 39, .72);
+      --line: rgba(255, 255, 255, .10);
+      --line2: rgba(118, 139, 255, .22);
+      --text: #f5f7ff;
+      --muted: #858ba5;
+      --blue: #6f82ff;
+      --blue2: #9b7cff;
+      --glow: rgba(65, 91, 255, .45);
+      --radius: 24px;
     }
 
     * {
-      box-sizing: border-box
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent
     }
 
     html,
     body {
+      width: 100%;
       height: 100%;
       margin: 0;
-      background: #02030a;
+      overflow: hidden;
+      background: var(--bg);
       color: var(--text);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-      overflow: hidden
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif
     }
 
     button,
-    input,
     textarea {
       font: inherit
     }
 
     button {
+      border: 0;
       color: inherit
-    }
-
-    ::-webkit-scrollbar {
-      width: 0;
-      height: 0
     }
 
     body:before {
       content: "";
       position: fixed;
-      inset: -25%;
+      inset: -20%;
       background:
-        radial-gradient(circle at 50% 40%, rgba(35, 84, 255, .13), transparent 25%),
-        radial-gradient(circle at 15% 15%, rgba(0, 180, 255, .09), transparent 22%),
-        radial-gradient(circle at 85% 85%, rgba(115, 70, 255, .10), transparent 25%);
-      filter: blur(60px);
+        radial-gradient(circle at 50% 36%, rgba(47, 68, 255, .16), transparent 30%),
+        radial-gradient(circle at 15% 100%, rgba(81, 55, 255, .10), transparent 28%),
+        radial-gradient(circle at 90% 10%, rgba(23, 106, 255, .08), transparent 25%);
       pointer-events: none;
     }
 
     .app {
-      position: relative;
-      display: grid;
-      grid-template-columns: 82px minmax(285px, 320px) minmax(0, 1fr) minmax(300px, 360px);
-      grid-template-rows: 72px minmax(0, 1fr) 44px;
-      width: 100vw;
-      height: 100vh;
-      padding-top: var(--safe-top);
-      padding-bottom: var(--safe-bottom);
-      isolation: isolate;
-    }
-
-    .glass {
-      background: linear-gradient(180deg, rgba(26, 30, 45, .77), rgba(8, 10, 18, .74));
-      border: 1px solid var(--line);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035), var(--glow);
-      backdrop-filter: blur(22px) saturate(145%);
-      -webkit-backdrop-filter: blur(22px) saturate(145%);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative
     }
 
     .topbar {
-      grid-column: 1/-1;
-      grid-row: 1;
+      height: 64px;
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(3, 4, 9, .55);
-      backdrop-filter: blur(18px);
-      z-index: 5;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: relative;
+      z-index: 10;
+      border-bottom: 1px solid rgba(255, 255, 255, .055);
+      background: rgba(2, 3, 9, .62);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px)
     }
 
     .brand {
-      width: 46px;
-      height: 46px;
-      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: -.02em
+    }
+
+    .brandmark {
+      width: 31px;
+      height: 31px;
+      border-radius: 10px;
       display: grid;
       place-items: center;
-      background: radial-gradient(circle at 30% 30%, #9ecbff, transparent 35%), linear-gradient(145deg, #1232a8, #25186d 58%, #06101e);
-      box-shadow: 0 0 34px rgba(59, 119, 255, .35), inset 0 1px 0 rgba(255, 255, 255, .25);
-      border: 1px solid rgba(255, 255, 255, .18);
-      flex: none;
+      background: linear-gradient(145deg, #8d9cff, #445bff);
+      box-shadow: 0 0 25px rgba(77, 93, 255, .4)
     }
 
-    .brand svg {
-      width: 25px;
-      height: 25px;
-      filter: drop-shadow(0 0 8px rgba(100, 180, 255, .9))
-    }
-
-    .crumbs {
-      min-width: 0
-    }
-
-    .title {
-      font-weight: 750;
-      letter-spacing: -.02em;
-      font-size: 16px
-    }
-
-    .sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px
+    .brandmark svg {
+      width: 18px;
+      height: 18px
     }
 
     .top-actions {
-      margin-left: auto;
       display: flex;
       gap: 8px
     }
 
-    .icon-btn,
-    .pill-btn {
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .045);
-      border-radius: 13px;
-      min-height: 40px;
-      padding: 0 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      transition: .18s ease;
-    }
-
     .icon-btn {
-      width: 42px;
-      padding: 0
-    }
-
-    .icon-btn:hover,
-    .pill-btn:hover {
-      background: rgba(255, 255, 255, .085);
-      border-color: var(--line2);
-      transform: translateY(-1px)
-    }
-
-    .icon-btn svg,
-    .pill-btn svg {
-      width: 17px;
-      height: 17px
-    }
-
-    .rail {
-      grid-column: 1;
-      grid-row: 2/3;
-      border-right: 1px solid var(--line);
-      background: rgba(2, 3, 9, .5);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 9px;
-      padding: 15px 10px;
-      z-index: 4;
-    }
-
-    .rail-spacer {
-      flex: 1
-    }
-
-    .rail button {
-      width: 50px;
-      height: 50px;
-      border-radius: 16px;
-      border: 1px solid transparent;
-      background: transparent;
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, .055);
+      border: 1px solid rgba(255, 255, 255, .07);
       display: grid;
       place-items: center;
-      cursor: pointer;
-      color: #8d94a7;
-    }
-
-    .rail button.active {
-      background: rgba(81, 131, 255, .12);
-      border-color: rgba(117, 155, 255, .23);
-      color: white;
-      box-shadow: 0 0 28px rgba(81, 131, 255, .17)
-    }
-
-    .rail button:hover {
-      background: rgba(255, 255, 255, .05);
-      color: #fff
-    }
-
-    .rail svg {
-      width: 20px;
-      height: 20px
-    }
-
-    .sidebar {
-      grid-column: 2;
-      grid-row: 2/3;
-      border-right: 1px solid var(--line);
-      padding: 14px;
-      min-width: 0;
-      overflow: auto;
-      background: rgba(4, 5, 11, .28);
-    }
-
-    .section-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .13em;
-      color: #6f7585;
-      margin: 5px 8px 9px;
-    }
-
-    .search {
-      height: 43px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .035);
-      border-radius: 14px;
-      padding: 0 13px;
-      color: white;
-      width: 100%;
-      outline: none;
-    }
-
-    .search::placeholder {
-      color: #666d7f
-    }
-
-    .model-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 10px
-    }
-
-    .model-card {
-      width: 100%;
-      text-align: left;
-      border: 1px solid transparent;
-      background: rgba(255, 255, 255, .026);
-      border-radius: 17px;
-      padding: 12px;
-      cursor: pointer;
-      transition: .18s ease;
-    }
-
-    .model-card:hover {
-      background: rgba(255, 255, 255, .052);
-      border-color: var(--line)
-    }
-
-    .model-card.selected {
-      background: linear-gradient(180deg, rgba(76, 119, 255, .15), rgba(42, 59, 118, .08));
-      border-color: rgba(100, 145, 255, .34);
-      box-shadow: inset 0 0 32px rgba(91, 126, 255, .06);
-    }
-
-    .model-row {
-      display: flex;
-      align-items: center;
-      gap: 11px
-    }
-
-    .logo {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, .065);
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      flex: none;
-      border: 1px solid rgba(255, 255, 255, .07)
-    }
-
-    .logo img {
-      width: 21px;
-      height: 21px;
-      object-fit: contain
-    }
-
-    .logo-fallback {
-      font-weight: 750;
-      font-size: 14px
-    }
-
-    .model-name {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: -.01em
-    }
-
-    .provider {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px
-    }
-
-    .badge {
-      margin-left: auto;
-      font-size: 9px;
-      padding: 5px 7px;
-      border-radius: 8px;
-      color: #cbd6ff;
-      background: rgba(84, 122, 255, .11);
-      border: 1px solid rgba(103, 144, 255, .19)
-    }
-
-    .desc {
-      color: #767d90;
-      font-size: 11px;
-      line-height: 1.45;
-      margin-top: 9px
-    }
-
-    .connect-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px
-    }
-
-    .small-btn {
-      flex: 1;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .04);
-      border-radius: 11px;
-      padding: 8px 9px;
-      cursor: pointer;
-      color: #dce0ec;
-      font-size: 11px
-    }
-
-    .workspace {
-      grid-column: 3;
-      grid-row: 2/3;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      background: rgba(2, 3, 8, .24);
-    }
-
-    .workspace-head {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
-      min-height: 60px
-    }
-
-    .tabs {
-      display: flex;
-      gap: 6px;
-      min-width: 0;
-      overflow: auto
-    }
-
-    .tab {
-      border: 1px solid transparent;
-      background: transparent;
-      border-radius: 11px;
-      padding: 8px 11px;
-      color: #8f96a7;
-      font-size: 12px;
-      white-space: nowrap;
       cursor: pointer
     }
 
-    .tab.active {
-      background: rgba(255, 255, 255, .05);
-      border-color: var(--line);
-      color: #fff
+    .icon-btn:active {
+      transform: scale(.96);
+      background: rgba(255, 255, 255, .10)
     }
 
-    .head-spacer {
-      flex: 1
+    svg {
+      display: block
     }
 
-    .status {
+    .main {
+      flex: 1;
+      min-height: 0;
       display: flex;
-      align-items: center;
-      gap: 7px;
-      color: #9298aa;
-      font-size: 11px
-    }
-
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #36e59b;
-      box-shadow: 0 0 12px rgba(54, 229, 155, .7)
+      position: relative
     }
 
     .chat {
-      flex: 1;
-      overflow: auto;
-      padding: 30px 18px 160px;
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      align-items: center;
+      overflow: hidden;
+      transition: width .35s ease
+    }
+
+    .messages {
+      width: min(850px, 100%);
+      flex: 1;
+      overflow: auto;
+      padding: 38px 20px 160px;
+      scrollbar-width: none
+    }
+
+    .messages::-webkit-scrollbar {
+      display: none
     }
 
     .welcome {
-      width: min(820px, 100%);
-      margin: auto auto 30px;
+      height: 100%;
+      min-height: 430px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
+      padding: 20px
     }
 
-    .halo {
-      width: 74px;
-      height: 74px;
-      border-radius: 24px;
-      margin: 0 auto 18px;
+    .orb {
+      width: 76px;
+      height: 76px;
+      border-radius: 25px;
+      margin-bottom: 22px;
+      position: relative;
+      background: rgba(28, 34, 70, .55);
+      border: 1px solid rgba(139, 151, 255, .24);
+      box-shadow: 0 0 70px rgba(64, 87, 255, .23), inset 0 0 35px rgba(101, 115, 255, .12);
       display: grid;
-      place-items: center;
-      background: radial-gradient(circle at 30% 25%, #b7d6ff, transparent 32%), linear-gradient(145deg, #183bd1, #10154e 60%, #07090f);
-      box-shadow: 0 0 65px rgba(64, 115, 255, .32), inset 0 1px 0 rgba(255, 255, 255, .26);
+      place-items: center
+    }
+
+    .orb:before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: 25px;
+      background: conic-gradient(from 0deg, transparent, #6c7cff, transparent, #9e73ff, transparent);
+      filter: blur(1px);
+      opacity: .7;
+      animation: spin 5s linear infinite
+    }
+
+    .orb:after {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      border-radius: 23px;
+      background: #0b0d19
+    }
+
+    .orb svg {
+      position: relative;
+      z-index: 2
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
     }
 
     .welcome h1 {
-      font-size: 31px;
-      letter-spacing: -.045em;
-      margin: 0
+      font-size: 32px;
+      line-height: 1.05;
+      margin: 0 0 10px;
+      letter-spacing: -.04em
     }
 
     .welcome p {
-      color: #7d8496;
-      font-size: 13px;
-      line-height: 1.7;
-      max-width: 650px;
-      margin: 12px auto 0
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 18px
-    }
-
-    .chip {
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .035);
-      border-radius: 999px;
-      padding: 8px 11px;
-      color: #aeb4c4;
-      font-size: 11px;
-      cursor: pointer
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 520px
     }
 
     .message {
-      width: min(900px, 94%);
-      margin: 0 auto;
       display: flex;
-      gap: 11px;
-      align-items: flex-start
-    }
-
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 11px;
-      flex: none;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .05)
-    }
-
-    .bubble {
-      max-width: 820px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .035);
-      border-radius: 18px;
-      padding: 13px 15px;
-      font-size: 13px;
-      line-height: 1.6;
-      color: #e6e9f2
+      gap: 12px;
+      margin: 0 0 28px
     }
 
     .message.user {
       justify-content: flex-end
     }
 
-    .message.user .bubble {
-      background: linear-gradient(180deg, rgba(58, 91, 182, .2), rgba(255, 255, 255, .045));
-      border-color: rgba(113, 147, 255, .24)
+    .bubble {
+      max-width: 78%;
+      padding: 14px 16px;
+      border-radius: 19px;
+      background: rgba(255, 255, 255, .055);
+      border: 1px solid rgba(255, 255, 255, .07);
+      line-height: 1.55;
+      font-size: 15px;
+      white-space: pre-wrap
+    }
+
+    .user .bubble {
+      background: rgba(69, 81, 155, .30);
+      border-color: rgba(116, 132, 255, .20)
+    }
+
+    .ai .bubble {
+      background: transparent;
+      border: 0;
+      padding: 2px 0;
+      max-width: 90%
+    }
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: #11162a;
+      border: 1px solid var(--line);
+      flex: none;
+      overflow: hidden
+    }
+
+    .avatar img,
+    .avatar svg {
+      width: 20px;
+      height: 20px
+    }
+
+    .typing {
+      display: flex;
+      gap: 5px;
+      padding: 8px 0
+    }
+
+    .typing i {
+      width: 5px;
+      height: 5px;
+      background: #9da8ff;
+      border-radius: 50%;
+      animation: b 1s infinite
+    }
+
+    .typing i:nth-child(2) {
+      animation-delay: .15s
+    }
+
+    .typing i:nth-child(3) {
+      animation-delay: .3s
+    }
+
+    @keyframes b {
+      50% {
+        opacity: .25;
+        transform: translateY(-3px)
+      }
+    }
+
+    .code-card {
+      margin-top: 14px;
+      border: 1px solid rgba(110, 129, 255, .20);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #080a11;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, .35)
+    }
+
+    .code-head {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      background: #0d1019;
+      border-bottom: 1px solid var(--line)
+    }
+
+    .dots {
+      display: flex;
+      gap: 5px
+    }
+
+    .dots i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34394b
+    }
+
+    .lang {
+      font-size: 11px;
+      color: #7e85a0;
+      text-transform: uppercase;
+      letter-spacing: .12em
+    }
+
+    .copy {
+      font-size: 12px;
+      color: #aeb5d4;
+      background: transparent;
+      padding: 6px 8px;
+      cursor: pointer
     }
 
     pre {
-      margin: 10px 0 0;
+      margin: 0;
+      padding: 17px;
       overflow: auto;
-      background: #05070d;
-      border: 1px solid rgba(255, 255, 255, .08);
-      border-radius: 14px;
-      padding: 13px;
-      color: #d7dded;
-      font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace
+      font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #dce1ff;
+      tab-size: 2
     }
 
     .composer-wrap {
+      width: min(850px, 100%);
+      padding: 0 20px calc(18px + env(safe-area-inset-bottom));
       position: absolute;
-      left: calc(82px + 320px + 50%);
-      bottom: 62px;
-      transform: translateX(-50%);
-      width: min(820px, calc(100% - 430px));
+      bottom: 0;
       z-index: 8
     }
 
     .composer {
-      border: 1px solid rgba(122, 154, 255, .34);
-      background: linear-gradient(180deg, rgba(31, 42, 92, .70), rgba(9, 11, 20, .88));
+      position: relative;
       border-radius: 24px;
-      box-shadow: 0 20px 90px rgba(22, 64, 180, .25), inset 0 0 45px rgba(72, 111, 255, .08);
-      backdrop-filter: blur(22px);
-      -webkit-backdrop-filter: blur(22px);
-      padding: 12px;
+      padding: 1px;
+      background: linear-gradient(110deg, #4c5cff, #a875ff, #426cff, #6d78ff);
+      background-size: 300% 300%;
+      animation: borderFlow 7s ease infinite;
+      box-shadow: 0 0 55px rgba(57, 72, 255, .17)
+    }
+
+    .composer:before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 26px;
+      background: inherit;
+      filter: blur(13px);
+      opacity: .38;
+      z-index: -1;
+      animation: borderFlow 7s ease infinite
+    }
+
+    @keyframes borderFlow {
+      0% {
+        background-position: 0% 50%
+      }
+
+      50% {
+        background-position: 100% 50%
+      }
+
+      100% {
+        background-position: 0% 50%
+      }
+    }
+
+    .composer-inner {
+      background: rgba(9, 11, 20, .91);
+      border-radius: 23px;
+      min-height: 122px;
+      padding: 15px 16px 12px;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px)
     }
 
     textarea {
       width: 100%;
-      min-height: 74px;
-      max-height: 180px;
+      height: 58px;
       resize: none;
-      background: transparent;
+      outline: none;
       border: 0;
-      outline: 0;
-      color: white;
-      font-size: 14px;
-      line-height: 1.55;
-      padding: 5px 8px
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.45
     }
 
     textarea::placeholder {
-      color: #777e91
+      color: #686e87
     }
 
-    .composer-bottom {
+    .composer-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      border-top: 1px solid rgba(255, 255, 255, .06);
-      padding-top: 9px
+      justify-content: space-between;
+      gap: 10px
     }
 
-    .model-select {
-      border: 0;
-      background: transparent;
-      color: #c6cce0;
-      outline: none;
-      max-width: 220px;
-      font-size: 12px
-    }
-
-    .composer-actions {
-      margin-left: auto;
+    .left-tools,
+    .right-tools {
       display: flex;
+      align-items: center;
       gap: 7px
     }
 
-    .send {
-      min-width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      border: 1px solid rgba(118, 163, 255, .4);
-      background: linear-gradient(145deg, #4278ff, #3457d9);
+    .model-select {
+      min-height: 38px;
+      max-width: 240px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 11px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .055);
+      border: 1px solid rgba(255, 255, 255, .06);
       cursor: pointer;
+      color: #dfe3f7;
+      font-size: 13px
+    }
+
+    .model-select img,
+    .model-logo {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      border-radius: 6px
+    }
+
+    .model-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .send {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
       display: grid;
       place-items: center;
-      box-shadow: 0 0 28px rgba(55, 108, 255, .28)
+      cursor: pointer;
+      background: linear-gradient(145deg, #8b9aff, #5266ff);
+      box-shadow: 0 8px 25px rgba(72, 88, 255, .35)
     }
 
-    .send svg {
-      width: 18px;
-      height: 18px
+    .send:active {
+      transform: scale(.95)
     }
 
-    .send:disabled {
-      opacity: .45;
-      cursor: default
+    .send[disabled] {
+      opacity: .4;
+      filter: grayscale(1)
     }
 
-    .rightbar {
-      grid-column: 4;
-      grid-row: 2/3;
-      border-left: 1px solid var(--line);
-      padding: 14px;
-      overflow: auto;
-      background: rgba(3, 4, 10, .34)
-    }
-
-    .panel {
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .024);
+    .model-menu {
+      position: absolute;
+      left: 16px;
+      bottom: 78px;
+      width: min(340px, calc(100% - 32px));
+      padding: 8px;
       border-radius: 18px;
-      padding: 12px;
-      margin-bottom: 10px
+      background: rgba(12, 15, 26, .96);
+      border: 1px solid rgba(133, 147, 255, .18);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, .65);
+      backdrop-filter: blur(25px);
+      display: none;
+      z-index: 30
     }
 
-    .panel-head {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      margin-bottom: 11px
+    .model-menu.open {
+      display: block
     }
 
-    .panel-title {
-      font-size: 12px;
-      font-weight: 700
-    }
-
-    .panel-meta {
-      margin-left: auto;
-      font-size: 10px;
-      color: #676e80
-    }
-
-    .file {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      border-radius: 11px;
-      padding: 9px 8px;
-      color: #bfc4d2;
-      font-size: 12px;
-      cursor: pointer
-    }
-
-    .file:hover {
-      background: rgba(255, 255, 255, .04);
-      color: #fff
-    }
-
-    .file.active {
-      background: rgba(66, 107, 222, .13);
-      color: white
-    }
-
-    .file svg {
-      width: 15px;
-      height: 15px
-    }
-
-    .connector {
-      border: 1px solid var(--line);
-      padding: 10px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, .025);
+    .model-item {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-top: 8px
-    }
-
-    .connector-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      background: rgba(255, 255, 255, .06)
-    }
-
-    .connector-name {
-      font-size: 12px;
-      font-weight: 650
-    }
-
-    .connector-sub {
-      font-size: 10px;
-      color: #737a8c;
-      margin-top: 2px
-    }
-
-    .connector-state {
-      margin-left: auto;
-      font-size: 9px;
-      color: #8f98aa
-    }
-
-    .switch {
-      width: 39px;
-      height: 22px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: #141722;
-      padding: 2px;
+      padding: 11px;
+      border-radius: 12px;
       cursor: pointer
     }
 
-    .switch span {
+    .model-item:hover,
+    .model-item:active {
+      background: rgba(255, 255, 255, .06)
+    }
+
+    .model-item strong {
+      font-size: 13px
+    }
+
+    .model-item small {
       display: block;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #737b8f;
-      transition: .18s
+      color: #727991;
+      margin-top: 2px
     }
 
-    .switch.on {
-      background: #2548c7;
-      border-color: #5f83ff
-    }
-
-    .switch.on span {
-      transform: translateX(16px);
-      background: white
-    }
-
-    .note {
+    .model-item .badge {
+      margin-left: auto;
       font-size: 10px;
-      color: #666d7d;
-      line-height: 1.55;
-      margin-top: 9px
+      color: #9fa8d2;
+      border: 1px solid var(--line);
+      padding: 4px 6px;
+      border-radius: 7px
     }
 
-    .editor {
-      display: none;
-      height: 100%;
+    .workspace {
+      width: 0;
+      overflow: hidden;
+      border-left: 1px solid transparent;
+      background: #05070d;
+      transition: width .35s ease;
+      display: flex;
       flex-direction: column
     }
 
-    .editor.active {
-      display: flex
+    .workspace.active {
+      width: 50%;
+      border-left-color: var(--line)
     }
 
-    .editor-top {
+    .workspace-head {
+      height: 58px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 9px 12px;
+      justify-content: space-between;
+      padding: 0 15px;
       border-bottom: 1px solid var(--line)
     }
 
-    .editor-title {
-      font-size: 12px;
-      color: #c9cede
-    }
-
-    .code {
-      flex: 1;
-      resize: none;
-      border: 0;
-      outline: 0;
-      background: #05060a;
-      color: #dbe0ef;
-      padding: 22px;
-      font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace
-    }
-
-    .statusbar {
-      grid-column: 1/-1;
-      grid-row: 3;
-      border-top: 1px solid var(--line);
+    .workspace-title {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 0 14px;
-      color: #6f7686;
-      font-size: 10px;
-      background: rgba(3, 4, 9, .7)
+      gap: 9px;
+      font-size: 13px;
+      font-weight: 600
     }
 
-    .statusbar .grow {
-      flex: 1
+    .file-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7184ff;
+      box-shadow: 0 0 12px #7184ff
     }
 
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 125px;
-      transform: translateX(-50%) translateY(20px);
-      opacity: 0;
-      pointer-events: none;
-      transition: .22s ease;
-      border: 1px solid var(--line2);
-      background: rgba(9, 11, 18, .92);
-      backdrop-filter: blur(18px);
-      padding: 11px 14px;
-      border-radius: 13px;
-      color: #e4e8f4;
-      font-size: 12px;
-      z-index: 30;
-      box-shadow: 0 14px 50px rgba(0, 0, 0, .38)
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0)
-    }
-
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, .58);
-      z-index: 20;
-      align-items: center;
-      justify-content: center;
-      padding: 20px
-    }
-
-    .modal-backdrop.show {
+    .workspace-body {
+      flex: 1;
+      min-height: 0;
       display: flex
     }
 
-    .modal {
-      width: min(590px, 100%);
-      border: 1px solid var(--line2);
-      background: linear-gradient(180deg, #121624, #080a11);
-      border-radius: 22px;
-      padding: 18px;
-      box-shadow: 0 30px 100px rgba(0, 0, 0, .5)
+    .line-nos {
+      width: 45px;
+      padding: 16px 8px;
+      text-align: right;
+      color: #34394a;
+      font: 12px/1.65 ui-monospace, monospace;
+      border-right: 1px solid rgba(255, 255, 255, .04)
     }
 
-    .modal h2 {
-      margin: 0;
-      font-size: 18px
+    .editor {
+      flex: 1;
+      min-width: 0;
+      overflow: auto;
+      padding: 16px;
+      font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #dce1ff;
+      white-space: pre
     }
 
-    .modal p {
-      color: #82899a;
-      font-size: 12px;
-      line-height: 1.65
-    }
-
-    .field {
+    .workspace-foot {
+      height: 48px;
+      border-top: 1px solid var(--line);
       display: flex;
-      flex-direction: column;
-      gap: 7px;
-      margin-top: 12px
-    }
-
-    .field label {
-      font-size: 11px;
-      color: #949bad
-    }
-
-    .field input,
-    .field textarea {
-      min-height: 42px;
-      background: #080a10;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 10px;
-      color: #fff;
-      outline: 0
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
+      align-items: center;
       gap: 8px;
-      margin-top: 15px
+      padding: 0 14px;
+      color: #6f7690;
+      font-size: 11px
     }
 
-    @media (max-width: 1050px) {
-      .app {
-        grid-template-columns: 70px 260px minmax(0, 1fr)
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .status i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #6f82ff
+    }
+
+    @media(max-width:820px) {
+      .workspace.active {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        z-index: 20
       }
 
-      .rightbar {
+      .workspace:not(.active) {
         display: none
       }
 
-      .composer-wrap {
-        left: calc(70px + 260px + 50%);
-        width: calc(100% - 360px)
-      }
-    }
-
-    @media (max-width: 760px) {
-      .app {
-        grid-template-columns: 64px minmax(0, 1fr)
-      }
-
-      .sidebar {
-        display: none
-      }
-
-      .workspace {
-        grid-column: 2
-      }
-
-      .rail {
-        grid-column: 1
-      }
-
-      .composer-wrap {
-        left: calc(64px + 50%);
-        width: calc(100% - 80px)
+      .messages {
+        padding-top: 20px
       }
 
       .welcome h1 {
-        font-size: 25px
+        font-size: 27px
       }
 
-      .top-actions .hide-small {
-        display: none
+      .bubble {
+        max-width: 88%
+      }
+
+      .composer-wrap {
+        padding-left: 12px;
+        padding-right: 12px
+      }
+
+      .model-select {
+        max-width: 180px
       }
     }
   </style>
@@ -932,454 +672,371 @@
 <body>
   <div class="app">
     <header class="topbar">
-      <div class="brand" title="Forge AI">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 12h16M12 4v16" stroke="white" stroke-width="1.8" stroke-linecap="round" />
-          <path d="M8 7.2 12 3l4 4.2-4 4.1-4-4.1Z" fill="url(#g)" />
-          <defs>
-            <linearGradient id="g" x1="5" y1="4" x2="18" y2="18">
-              <stop stop-color="#B9D8FF" />
-              <stop offset="1" stop-color="#5778FF" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-      <div class="crumbs">
-        <div class="title">Forge AI</div>
-        <div class="sub">Serious coding, agents, tools and connected apps.</div>
+      <div class="brand">
+        <div class="brandmark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M7 17 17 7M8 7h9v9" stroke="white" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+        <span>Forge</span>
       </div>
       <div class="top-actions">
-        <button class="pill-btn hide-small" id="newChatBtn"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>New chat</button>
-        <button class="icon-btn" id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" fill="none"><path d="M12 8.8A3.2 3.2 0 1 0 12 15.2 3.2 3.2 0 0 0 12 8.8Z" stroke="currentColor" stroke-width="1.6"/><path d="M4 13.4v-2.8l2-.6a7 7 0 0 1 .9-2.1L6 6.1 8 4.1l1.8.9A7 7 0 0 1 12 4.1l.6-2h2.8l.6 2a7 7 0 0 1 2.1.9l1.8-.9 2 2-1 1.8a7 7 0 0 1 .9 2.1l2 .6v2.8l-2 .6a7 7 0 0 1-.9 2.1l1 1.8-2 2-1.8-1a7 7 0 0 1-2.1.9l-.6 2h-2.8l-.6-2a7 7 0 0 1-2.2-.9l-1.8 1-2-2 1-1.8a7 7 0 0 1-.9-2.1l-2-.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
+        <button class="icon-btn" id="newChat" title="New chat" aria-label="New chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+        <button class="icon-btn" id="closeWorkspace" title="Close code" aria-label="Close code" style="display:none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
       </div>
     </header>
 
-    <aside class="rail">
-      <button class="active" data-view="chat" title="AI Chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14v10H8l-3 3V5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
-      <button data-view="code" title="Code editor"><svg viewBox="0 0 24 24" fill="none"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <button data-view="files" title="Files"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h6l2 2h8v10H4V6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></button>
-      <button data-view="apps" title="Connected apps"><svg viewBox="0 0 24 24" fill="none"><path d="M9 7V5a3 3 0 0 1 6 0v2m4 0v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7h14Z" stroke="currentColor" stroke-width="1.6"/><path d="M8 11h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
-      <div class="rail-spacer"></div>
-      <button title="Help"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M9.8 9.2a2.4 2.4 0 1 1 3.9 1.9c-1.1.8-1.7 1.2-1.7 2.5M12 17h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
-    </aside>
-
-    <aside class="sidebar">
-      <div class="section-label">Models</div>
-      <input class="search" id="modelSearch" placeholder="Search models..." autocomplete="off" />
-      <div class="model-list" id="modelList"></div>
-      <div class="section-label" style="margin-top:18px">Workspace</div>
-      <button class="small-btn" id="openModelsBtn">Open model registry</button>
-      <p class="note">Models are read directly from <code>models.js</code>. Add a model there and it appears here
-        automatically.</p>
-    </aside>
-
-    <main class="workspace">
-      <div class="workspace-head">
-        <div class="tabs">
-          <button class="tab active" data-tab="chat">AI Chat</button>
-          <button class="tab" data-tab="editor">Code Editor</button>
-          <button class="tab" data-tab="preview">Preview</button>
-        </div>
-        <div class="head-spacer"></div>
-        <div class="status"><span class="dot"></span><span id="statusText">Ready</span></div>
-      </div>
-
-      <section class="chat" id="chatView">
-        <div class="welcome" id="welcome">
-          <div class="halo">
-            <svg viewBox="0 0 24 24" width="33" height="33" fill="none">
-              <path d="M12 3v18M3 12h18M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="white" stroke-width="1.3"
-                stroke-linecap="round" opacity=".9" />
-            </svg>
+    <main class="main">
+      <section class="chat">
+        <div class="messages" id="messages">
+          <div class="welcome" id="welcome">
+            <div class="orb">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+                <path d="m12 3 1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9L12 3Z" stroke="#dbe0ff"
+                  stroke-width="1.4" />
+                <path d="m19 4 .55 1.45L21 6l-1.45.55L19 8l-.55-1.45L17 6l1.45-.55L19 4Z" stroke="#8190ff"
+                  stroke-width="1.1" />
+              </svg>
+            </div>
+            <h1>What are we building?</h1>
+            <p>Describe the website, game, app, or feature you want to create. Forge will work with the selected AI
+              model and surface code when it starts coding.</p>
           </div>
-          <h1>Build with AI. Keep control.</h1>
-          <p>One focused iPad workspace for serious coding, model switching, files, previews, and app connections. Your
-            model registry stays separate so the UI does not need rebuilding when models change.</p>
-          <div class="chips">
-            <button class="chip" data-prompt="Create a clean iPad-first HTML game starter with a polished UI.">HTML game starter</button>
-            <button class="chip" data-prompt="Review my code for bugs, performance problems, and iPad touch issues.">Review code</button>
-            <button class="chip" data-prompt="Build a single-file WebGL prototype with physics and realistic lighting.">WebGL prototype</button>
-            <button class="chip" data-prompt="Design a modern app architecture with reusable components and clear files.">Architecture</button>
+        </div>
+
+        <div class="composer-wrap">
+          <div class="model-menu" id="modelMenu"></div>
+          <div class="composer">
+            <div class="composer-inner">
+              <textarea id="prompt" placeholder="Ask Forge to build something…" autocomplete="off" spellcheck="false"></textarea>
+              <div class="composer-row">
+                <div class="left-tools">
+                  <button class="model-select" id="modelSelect" type="button" aria-label="Choose AI model">
+                  <span id="selectedLogo"></span>
+                  <span class="model-name" id="selectedModel">Loading models…</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+                </div>
+                <div class="right-tools">
+                  <button class="icon-btn" id="clearPrompt" title="Clear" aria-label="Clear prompt">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </button>
+                  <button class="send" id="send" title="Send" aria-label="Send">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5.5 20 12 4 18.5l2.4-5.8L14 12l-7.6-.7L4 5.5Z" fill="white"/></svg>
+                </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="editor" id="editorView">
-        <div class="editor-top">
-          <span class="editor-title">index.html</span>
-          <div class="head-spacer"></div>
-          <button class="icon-btn" id="copyCodeBtn" title="Copy code"><svg viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.6"/></svg></button>
+      <aside class="workspace" id="workspace">
+        <div class="workspace-head">
+          <div class="workspace-title"><span class="file-dot"></span><span id="fileName">index.html</span></div>
+          <button class="icon-btn" id="copyCode" title="Copy code" aria-label="Copy code">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.7"/></svg>
+        </button>
         </div>
-        <textarea class="code" id="codeEditor" spellcheck="false"><!doctype html>
-<html>
-<head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="background:#05060a;color:white;font-family:system-ui;padding:40px">
-  <h1>Forge AI</h1>
-  <p>Start building here.</p>
-</body>
-</html></textarea>
-      </section>
-
-      <section class="editor" id="previewView">
-        <div class="editor-top"><span class="editor-title">Live preview</span></div>
-        <iframe id="previewFrame" style="flex:1;border:0;background:#05060a" sandbox="allow-scripts"></iframe>
-      </section>
+        <div class="workspace-body">
+          <div class="line-nos" id="lineNos">1</div>
+          <div class="editor" id="editor">// Your generated code will appear here.</div>
+        </div>
+        <div class="workspace-foot"><span class="status"><i></i> AI workspace</span><span>Ready</span></div>
+      </aside>
     </main>
-
-    <aside class="rightbar">
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Project files</div>
-          <div class="panel-meta">local</div>
-        </div>
-        <div class="file active"><svg viewBox="0 0 24 24" fill="none">
-            <path d="M6 3h8l4 4v14H6V3Z" stroke="currentColor" stroke-width="1.5" />
-            <path d="M14 3v5h4" stroke="currentColor" stroke-width="1.5" />
-          </svg>index.html</div>
-        <div class="file"><svg viewBox="0 0 24 24" fill="none">
-            <path d="M6 3h8l4 4v14H6V3Z" stroke="currentColor" stroke-width="1.5" />
-            <path d="M14 3v5h4" stroke="currentColor" stroke-width="1.5" />
-          </svg>styles.css</div>
-        <div class="file"><svg viewBox="0 0 24 24" fill="none">
-            <path d="M6 3h8l4 4v14H6V3Z" stroke="currentColor" stroke-width="1.5" />
-            <path d="M14 3v5h4" stroke="currentColor" stroke-width="1.5" />
-          </svg>models.js</div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Connected apps</div>
-          <div class="panel-meta">tools</div>
-        </div>
-
-        <div class="connector">
-          <div class="connector-icon"><svg viewBox="0 0 24 24" fill="none">
-              <path d="M7 6h10v5H7zM5 15h14v4H5zM12 11v4M9 8.5h.01M12 8.5h.01M15 8.5h.01" stroke="currentColor"
-                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg></div>
-          <div>
-            <div class="connector-name">Browser tools</div>
-            <div class="connector-sub">Search / fetch / preview</div>
-          </div>
-          <button class="switch on" aria-label="Browser tools"><span></span></button>
-        </div>
-
-        <div class="connector">
-          <div class="connector-icon"><svg viewBox="0 0 24 24" fill="none">
-              <path d="M4 7.5 12 3l8 4.5-8 4.5-8-4.5Z" stroke="currentColor" stroke-width="1.5" />
-              <path d="M4 12.5 12 17l8-4.5M4 17 12 21l8-4" stroke="currentColor" stroke-width="1.5" />
-            </svg></div>
-          <div>
-            <div class="connector-name">Project files</div>
-            <div class="connector-sub">Read / edit / inspect</div>
-          </div>
-          <button class="switch on" aria-label="Project files"><span></span></button>
-        </div>
-
-        <div class="connector">
-          <div class="connector-icon"><svg viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="1.5" />
-              <path d="M8.8 13.3 15.8 9l-4.3 7.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
-            </svg></div>
-          <div>
-            <div class="connector-name">Preview runtime</div>
-            <div class="connector-sub">Sandboxed browser frame</div>
-          </div>
-          <button class="switch on" aria-label="Preview runtime"><span></span></button>
-        </div>
-
-        <div class="note">These are UI-level connectors in this standalone build. Real OAuth/API integrations can be
-          attached later without changing the model registry UI.</div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Active model</div>
-          <div class="panel-meta" id="activeModelMeta">—</div>
-        </div>
-        <div id="activeModelCard" style="color:#747b8d;font-size:11px">Select a model to view details.</div>
-      </div>
-    </aside>
-
-    <div class="composer-wrap">
-      <div class="composer">
-        <textarea id="promptBox" placeholder="Describe what you want to build, change, debug or explain..." rows="2"></textarea>
-        <div class="composer-bottom">
-          <button class="pill-btn" id="attachBtn" title="Attach project context"><svg viewBox="0 0 24 24" fill="none"><path d="m15.5 7.5-6.7 6.7a2.2 2.2 0 1 0 3.1 3.1l7-7a4.2 4.2 0 0 0-5.9-5.9l-7.2 7.2a6.2 6.2 0 0 0 8.8 8.8l5.3-5.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="hide-small">Context</span></button>
-          <select class="model-select" id="modelSelect"></select>
-          <div class="composer-actions">
-            <button class="icon-btn" id="clearBtn" title="Clear chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 6h14M9 6V4h6v2M8 9v8M12 9v8M16 9v8M6 6l1 14h10l1-14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-            <button class="send" id="sendBtn" title="Send"><svg viewBox="0 0 24 24" fill="none"><path d="m4 5 16 7-16 7 3.2-7L4 5Z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 12h7" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg></button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <footer class="statusbar">
-      <span>Forge AI</span><span id="footerModel">No model selected</span>
-      <div class="grow"></div><span>iPad optimized</span><span>Standalone HTML</span>
-    </footer>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
-  <div class="modal-backdrop" id="settingsModal">
-    <div class="modal">
-      <h2>Forge settings</h2>
-      <p>Keep the UI separate from your model registry. The page imports <code>models.js</code> as a module, so adding
-        another object to the exported <code>models</code> array automatically creates its model card and selector
-        entry.</p>
-      <div class="field"><label>API request timeout (ms)</label><input id="timeoutInput" value="60000" inputmode="numeric">
-      </div>
-      <div class="field">
-        <label>System instruction</label><textarea id="systemInput" rows="4">You are Forge AI, a serious coding assistant. Give practical, correct code and explain important changes briefly. Prefer iPad-friendly web development when relevant.</textarea>
-      </div>
-      <div class="modal-actions">
-        <button class="pill-btn" id="closeSettings">Close</button><button class="pill-btn" id="saveSettings">Save</button>
-      </div>
-    </div>
   </div>
 
   <script type="module">
-    import { models } from "./models.js";
+    /*
+    Forge is intentionally connected to models.js rather than duplicating a model list here.
 
-    const $ = (s) => document.querySelector(s);
-    const $$ = (s) => [...document.querySelectorAll(s)];
+    Keep models.js beside this file:
+      /index.html
+      /models.js
 
-    const state = {
-      models: Array.isArray(models) ? models : [],
-      selectedId: localStorage.getItem("forge-selected-model") || "",
-      messages: [],
-      busy:false,
-      timeout:Number(localStorage.getItem("forge-timeout") || 60000),
-      system:localStorage.getItem("forge-system") || "You are Forge AI, a serious coding assistant. Give practical, correct code and explain important changes briefly. Prefer iPad-friendly web development when relevant."
-    };
+    Adding a model to models.js automatically adds it to the model picker.
+  */
+  import { models } from "./models.js";
 
-    const slug = (value="") => value.toLowerCase().replace(/[^a-z0-9]+/g,"").trim();
-    const simpleIconMap = {
-      "openai":"openai",
-      "anthropic":"anthropic",
-      "deepseek":"deepseek",
-      "moonshotai":"moonshot",
-      "moonshot ai":"moonshot"
-    };
+  const $ = id => document.getElementById(id);
+  const messages = $("messages");
+  const welcome = $("welcome");
+  const prompt = $("prompt");
+  const send = $("send");
+  const modelSelect = $("modelSelect");
+  const modelMenu = $("modelMenu");
+  const selectedModel = $("selectedModel");
+  const selectedLogo = $("selectedLogo");
+  const workspace = $("workspace");
+  const closeWorkspace = $("closeWorkspace");
+  const editor = $("editor");
+  const lineNos = $("lineNos");
+  const fileName = $("fileName");
 
-    function providerKey(m){
-      const p=(m?.provider||"").toLowerCase();
-      return simpleIconMap[p] || simpleIconMap[slug(p)] || slug(p);
+  let activeModel = models?.[0] || null;
+  let latestCode = "";
+
+  function logoElement(model, size = 20){
+    const holder = document.createElement("span");
+    holder.className = "model-logo";
+    holder.style.width = size + "px";
+    holder.style.height = size + "px";
+    holder.innerHTML = model?.logoSvg || `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/></svg>`;
+    const svg = holder.querySelector("svg");
+    if(svg){ svg.setAttribute("width", size); svg.setAttribute("height", size); }
+    return holder;
+  }
+
+  function renderModels(){
+    modelMenu.innerHTML = "";
+    if(!models.length){
+      selectedModel.textContent = "No models";
+      return;
+    }
+    models.forEach((model, index) => {
+      const item = document.createElement("div");
+      item.className = "model-item";
+      item.appendChild(logoElement(model));
+      const info = document.createElement("div");
+      info.style.minWidth = "0";
+      info.innerHTML = `<strong>${escapeHtml(model.name)}</strong><small>${escapeHtml(model.provider || "AI")}</small>`;
+      item.appendChild(info);
+      if(model.badge){
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = model.badge;
+        item.appendChild(badge);
+      }
+      item.addEventListener("click", () => {
+        activeModel = model;
+        updateSelectedModel();
+        modelMenu.classList.remove("open");
+      });
+      modelMenu.appendChild(item);
+      if(index === 0) activeModel = activeModel || model;
+    });
+    updateSelectedModel();
+  }
+
+  function updateSelectedModel(){
+    if(!activeModel) return;
+    selectedModel.textContent = activeModel.name;
+    selectedLogo.innerHTML = "";
+    selectedLogo.appendChild(logoElement(activeModel));
+  }
+
+  function escapeHtml(value){
+    return String(value ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  function addMessage(role, text, code = null, lang = "html"){
+    welcome?.remove();
+    const row = document.createElement("div");
+    row.className = "message " + role;
+
+    if(role === "ai"){
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      if(activeModel) avatar.appendChild(logoElement(activeModel, 20));
+      row.appendChild(avatar);
     }
 
-    // Actual brand marks are loaded from Simple Icons when available.
-    // The model registry remains the source of truth for model data.
-    function logoSource(m){
-      return "https://cdn.simpleicons.org/" + encodeURIComponent(providerKey(m));
-    }
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerHTML = formatText(text);
 
-    function logoHtml(m){
-      const initials=(m?.provider || m?.name || "AI").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase();
-      const fallback=(m?.logoSvg||"").replace(/"/g,"&quot;");
-      return `
-        <div class="logo">
-          <img src="${logoSource(m)}" alt="${(m?.provider||"AI")} logo"
-            data-fallback="${fallback}"
-            onerror="this.onerror=null;this.outerHTML='<div class=&quot;logo-fallback&quot;>${initials}</div>'">
-        </div>`;
-    }
-
-    function esc(s=""){
-      return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-    }
-
-    function selectedModel(){
-      return state.models.find(m=>m.id===state.selectedId) || state.models[0] || null;
-    }
-
-    function renderModels(filter=""){
-      const list=$("#modelList");
-      const select=$("#modelSelect");
-      const active=selectedModel();
-      const visible=state.models.filter(m => (m.name+" "+m.provider+" "+m.description).toLowerCase().includes(filter.toLowerCase()));
-      list.innerHTML = visible.map(m=>`
-        <button class="model-card ${m.id===active?.id?"selected":""}" data-model-id="${esc(m.id)}">
-          <div class="model-row">
-            ${logoHtml(m)}
-            <div style="min-width:0"><div class="model-name">${esc(m.name)}</div><div class="provider">${esc(m.provider)}</div></div>
-            <span class="badge">${esc(m.badge||"Model")}</span>
-          </div>
-          <div class="desc">${esc(m.description||"")}</div>
-        </button>`).join("") || `<div style="padding:20px;color:#697082;font-size:12px">No models found.</div>`;
-
-      select.innerHTML = state.models.map(m=>`<option value="${esc(m.id)}">${esc(m.name)} · ${esc(m.provider)}</option>`).join("");
-      if(active) select.value=active.id;
-
-      $$(".model-card").forEach(btn=>btn.addEventListener("click",()=>selectModel(btn.dataset.modelId)));
-      updateActivePanel();
-    }
-
-    function selectModel(id){
-      if(!state.models.some(m=>m.id===id)) return;
-      state.selectedId=id;localStorage.setItem("forge-selected-model",id);
-      renderModels($("#modelSearch").value);
-      toast("Switched to " + (selectedModel()?.name || "model"));
-    }
-
-    function updateActivePanel(){
-      const m=selectedModel();
-      $("#activeModelMeta").textContent=m ? "selected" : "—";
-      $("#footerModel").textContent=m ? `${m.name} · ${m.provider}` : "No model selected";
-      $("#activeModelCard").innerHTML=m ? `
-        <div style="display:flex;gap:10px;align-items:center">
-          ${logoHtml(m)}
-          <div><div style="font-size:13px;font-weight:700;color:#e9ecf5">${esc(m.name)}</div><div style="color:#7a8192;font-size:10px">${esc(m.provider)}</div></div>
+    if(code){
+      const card = document.createElement("div");
+      card.className = "code-card";
+      card.innerHTML = `
+        <div class="code-head">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <span class="lang">${escapeHtml(lang)}</span>
+          <button class="copy" type="button">Copy</button>
         </div>
-        <div style="margin-top:10px;color:#7f8697;font-size:10px;line-height:1.55">${esc(m.description||"")}</div>
-        <div style="margin-top:9px;color:#6c7384;font-size:10px">Endpoint: <span style="color:#9ba1b1">${esc(m.endpoint||"not set")}</span></div>` :
-        "Select a model to view details.";
+        <pre>${escapeHtml(code)}</pre>`;
+      card.querySelector(".copy").addEventListener("click", async () => {
+        await navigator.clipboard?.writeText(code);
+        card.querySelector(".copy").textContent = "Copied";
+        setTimeout(() => card.querySelector(".copy").textContent = "Copy", 1200);
+      });
+      bubble.appendChild(card);
     }
 
-    function toast(msg){
-      const el=$("#toast");el.textContent=msg;el.classList.add("show");
-      clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.classList.remove("show"),2200);
-    }
+    row.appendChild(bubble);
+    messages.appendChild(row);
+    messages.scrollTop = messages.scrollHeight;
+    return row;
+  }
 
-    function addMessage(role, text){
-      $("#welcome")?.remove();
-      const wrap=document.createElement("div");
-      wrap.className="message "+role;
-      wrap.innerHTML=`<div class="avatar">${role==="user"
-        ? '<svg viewBox="0 0 24 24" width="17" height="17" fill="none"><circle cx="12" cy="8" r="3.1" stroke="currentColor" stroke-width="1.5"/><path d="M5.2 19a6.8 6.8 0 0 1 13.6 0" stroke="currentColor" stroke-width="1.5"/></svg>'
-        : '<svg viewBox="0 0 24 24" width="17" height="17" fill="none"><path d="M12 4v16M4 12h16M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'}</div><div class="bubble">${renderMarkdownLite(text)}</div>`;
-      $("#chatView").appendChild(wrap);
-      $("#chatView").scrollTop=$("#chatView").scrollHeight;
-    }
+  function formatText(text){
+    return escapeHtml(text)
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/\n/g, "<br>");
+  }
 
-    function renderMarkdownLite(text){
-      let out=esc(text);
-      out=out.replace(/```([\\s\\S]*?)```/g,"<pre>$1</pre>");
-      out=out.replace(/`([^`]+)`/g,"<code style='background:rgba(255,255,255,.05);padding:2px 5px;border-radius:6px'>$1</code>");
-      out=out.replace(/\n/g,"<br>");
-      return out;
-    }
+  function showWorkspace(code, lang = "html"){
+    latestCode = code;
+    workspace.classList.add("active");
+    closeWorkspace.style.display = "grid";
+    editor.textContent = code;
+    fileName.textContent = lang === "css" ? "styles.css" : lang === "js" || lang === "javascript" ? "script.js" : "index.html";
+    const count = Math.max(1, code.split("\n").length);
+    lineNos.textContent = Array.from({length: count}, (_,i) => i + 1).join("\n");
+  }
 
-    async function withTimeout(promise, ms){
-      let timer;
-      const timeout=new Promise((_,rej)=>timer=setTimeout(()=>rej(new Error("Request timed out")),ms));
-      try{return await Promise.race([promise,timeout]);}finally{clearTimeout(timer);}
-    }
+  function extractCode(text){
+    const match = text.match(/```(?:html|css|javascript|js|typescript|ts|json|jsx|tsx|xml)?\s*\n?([\s\S]*?)```/i);
+    if(!match) return null;
+    const raw = match[1].trim();
+    const first = text.match(/```([a-z0-9+#-]*)/i);
+    return { code: raw, lang: first?.[1] || "code" };
+  }
 
-    async function sendToModel(m, userText){
-      const messages=[{role:"system",content:state.system}, ...state.messages, {role:"user",content:userText}];
-      const body={model:m.id,messages,temperature:0.2};
-      const url=m.endpoint;
+  function loadingMessage(){
+    const row = document.createElement("div");
+    row.className = "message ai";
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    if(activeModel) avatar.appendChild(logoElement(activeModel,20));
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerHTML = `<div class="typing"><i></i><i></i><i></i></div>`;
+    row.append(avatar,bubble);
+    messages.appendChild(row);
+    messages.scrollTop = messages.scrollHeight;
+    return row;
+  }
 
-      const response=await withTimeout(fetch(url,{
+  async function askModel(userText){
+    if(!activeModel) throw new Error("No AI model is available in models.js.");
+
+    const provider = String(activeModel.provider || "").toLowerCase();
+    const isAnthropic = provider.includes("anthropic") || String(activeModel.endpoint).includes("anthropic.com");
+
+    if(isAnthropic){
+      const body = {
+        model: activeModel.id,
+        max_tokens: 4096,
+        messages: [{ role:"user", content:userText }]
+      };
+      const res = await fetch(activeModel.endpoint, {
         method:"POST",
         headers:{
           "Content-Type":"application/json",
-          "Authorization":"Bearer "+m.apiKey
+          "x-api-key":activeModel.apiKey,
+          "anthropic-version":"2023-06-01",
+          "anthropic-dangerous-direct-browser-access":"true"
         },
         body:JSON.stringify(body)
-      }),state.timeout);
-
-      const raw=await response.text();
-      let data;try{data=JSON.parse(raw)}catch{data={raw}};
-      if(!response.ok) throw new Error(data?.error?.message || data?.message || `HTTP ${response.status}`);
-
-      // Works with common OpenAI-compatible response shapes.
-      return data?.choices?.[0]?.message?.content
-        || data?.choices?.[0]?.text
-        || data?.output?.[0]?.content?.[0]?.text
-        || data?.content?.[0]?.text
-        || data?.raw
-        || JSON.stringify(data,null,2);
+      });
+      if(!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      return data?.content?.map(x => x.text || "").join("") || "The model returned no text.";
     }
 
-    async function sendPrompt(){
-      const box=$("#promptBox"), text=box.value.trim();
-      if(!text || state.busy) return;
-      const m=selectedModel();
-      if(!m){toast("No model is available.");return;}
+    const body = {
+      model: activeModel.id,
+      messages: [
+        { role:"system", content:
+          "You are an expert software engineer and web game developer. When the user asks for code, provide production-quality code in fenced code blocks. Prefer complete, runnable implementations and explain only what is useful."
+        },
+        { role:"user", content:userText }
+      ],
+      temperature:0.35
+    };
 
-      state.busy=true;$("#sendBtn").disabled=true;$("#statusText").textContent="Thinking…";
-      addMessage("user",text);
-      state.messages.push({role:"user",content:text});
-      box.value="";
+    const res = await fetch(activeModel.endpoint, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer " + activeModel.apiKey
+      },
+      body:JSON.stringify(body)
+    });
+    if(!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || "The model returned no text.";
+  }
 
-      try{
-        const answer=await sendToModel(m,text);
-        addMessage("assistant",answer);
-        state.messages.push({role:"assistant",content:answer});
-        $("#statusText").textContent="Ready";
-      }catch(err){
-        const msg="Connection error: "+(err?.message || "Unknown error")+
-          "\\n\\nTip: browser CORS and provider gateway rules can block direct client-side requests. A tiny server/proxy is safer for production.";
-        addMessage("assistant",msg);
-        $("#statusText").textContent="Connection issue";
-      }finally{
-        state.busy=false;$("#sendBtn").disabled=false;
+  async function submit(){
+    const text = prompt.value.trim();
+    if(!text || send.disabled) return;
+
+    addMessage("user", text);
+    prompt.value = "";
+    send.disabled = true;
+    const loading = loadingMessage();
+
+    try{
+      const answer = await askModel(text);
+      loading.remove();
+
+      const code = extractCode(answer);
+      if(code){
+        addMessage("ai", answer, code.code, code.lang);
+        showWorkspace(code.code, code.lang);
+      }else{
+        addMessage("ai", answer);
       }
+    }catch(error){
+      loading.remove();
+      addMessage("ai", "I couldn't reach the selected model. Check the endpoint, API key, CORS policy, and model ID in models.js.\n\n" + (error?.message || "Unknown error"));
+    }finally{
+      send.disabled = false;
+      prompt.focus();
     }
+  }
 
-    function activateTab(name){
-      $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name));
-      $("#chatView").style.display=name==="chat"?"flex":"none";
-      $("#editorView").classList.toggle("active",name==="editor");
-      $("#previewView").classList.toggle("active",name==="preview");
-      if(name==="preview") refreshPreview();
+  modelSelect.addEventListener("click", e => {
+    e.stopPropagation();
+    modelMenu.classList.toggle("open");
+  });
+  document.addEventListener("click", () => modelMenu.classList.remove("open"));
+  send.addEventListener("click", submit);
+  prompt.addEventListener("keydown", e => {
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      submit();
     }
+  });
+  $("clearPrompt").addEventListener("click", () => { prompt.value = ""; prompt.focus(); });
+  closeWorkspace.addEventListener("click", () => {
+    workspace.classList.remove("active");
+    closeWorkspace.style.display = "none";
+  });
+  $("copyCode").addEventListener("click", async () => {
+    if(!latestCode) return;
+    await navigator.clipboard?.writeText(latestCode);
+  });
+  $("newChat").addEventListener("click", () => {
+    messages.innerHTML = "";
+    messages.appendChild(welcomeTemplate());
+    latestCode = "";
+    workspace.classList.remove("active");
+    closeWorkspace.style.display = "none";
+  });
 
-    function refreshPreview(){
-      const code=$("#codeEditor").value;
-      $("#previewFrame").srcdoc=code;
-    }
+  function welcomeTemplate(){
+    const el = document.createElement("div");
+    el.className = "welcome";
+    el.innerHTML = `
+      <div class="orb">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="m12 3 1.9 6.1L20 11l-6.1 1.9L12 19l-1.9-6.1L4 11l6.1-1.9L12 3Z" stroke="#dbe0ff" stroke-width="1.4"/><path d="m19 4 .55 1.45L21 6l-1.45.55L19 8l-.55-1.45L17 6l1.45-.55L19 4Z" stroke="#8190ff" stroke-width="1.1"/></svg>
+      </div>
+      <h1>What are we building?</h1>
+      <p>Describe the website, game, app, or feature you want to create.</p>`;
+    return el;
+  }
 
-    // Navigation rail
-    $$(".rail button[data-view]").forEach(btn=>btn.addEventListener("click",()=>{
-      $$(".rail button[data-view]").forEach(x=>x.classList.remove("active"));btn.classList.add("active");
-      const v=btn.dataset.view;
-      if(v==="chat") activateTab("chat");
-      if(v==="code") activateTab("editor");
-      if(v==="files") toast("Project files are shown in the right panel.");
-      if(v==="apps") toast("Connected apps are shown in the right panel.");
-    }));
-
-    $$(".tab").forEach(t=>t.addEventListener("click",()=>activateTab(t.dataset.tab)));
-    $("#modelSearch").addEventListener("input",(e)=>renderModels(e.target.value));
-    $("#modelSelect").addEventListener("change",(e)=>selectModel(e.target.value));
-    $("#sendBtn").addEventListener("click",sendPrompt);
-    $("#promptBox").addEventListener("keydown",e=>{if(e.key==="Enter" && !e.shiftKey){e.preventDefault();sendPrompt();}});
-    $("#clearBtn").addEventListener("click",()=>{state.messages=[];$("#chatView").innerHTML=`<div class="welcome" id="welcome"><div class="halo"><svg viewBox="0 0 24 24" width="33" height="33" fill="none"><path d="M12 3v18M3 12h18M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity=".9"/></svg></div><h1>Build with AI. Keep control.</h1><p>Your conversation has been cleared.</p></div>`;});
-    $("#newChatBtn").addEventListener("click",()=>$("#clearBtn").click());
-    $("#copyCodeBtn").addEventListener("click",async()=>{await navigator.clipboard?.writeText($("#codeEditor").value);toast("Code copied.");});
-    $("#codeEditor").addEventListener("input",()=>{if($("#previewView").classList.contains("active"))refreshPreview();});
-    $$(".chip").forEach(c=>c.addEventListener("click",()=>{ $("#promptBox").value=c.dataset.prompt;$("#promptBox").focus(); }));
-
-    $$(".switch").forEach(sw=>sw.addEventListener("click",()=>sw.classList.toggle("on")));
-
-    // Settings
-    $("#settingsBtn").addEventListener("click",()=>{
-      $("#timeoutInput").value=state.timeout;$("#systemInput").value=state.system;$("#settingsModal").classList.add("show");
-    });
-    $("#closeSettings").addEventListener("click",()=>$("#settingsModal").classList.remove("show"));
-    $("#saveSettings").addEventListener("click",()=>{
-      state.timeout=Number($("#timeoutInput").value)||60000;
-      state.system=$("#systemInput").value.trim()||state.system;
-      localStorage.setItem("forge-timeout",String(state.timeout));
-      localStorage.setItem("forge-system",state.system);
-      $("#settingsModal").classList.remove("show");toast("Settings saved.");
-    });
-    $("#settingsModal").addEventListener("click",e=>{if(e.target.id==="settingsModal")$("#settingsModal").classList.remove("show")});
-    $("#attachBtn").addEventListener("click",()=>toast("Context attachment UI is ready for your file connector."));
-
-    // Registry boot: if a new model is added to models.js, no HTML edit is required.
-    if(state.models.length && !state.models.some(m=>m.id===state.selectedId)) state.selectedId=state.models[0].id;
-    renderModels();
-    updateActivePanel();
-
-    // Helpful diagnostic in the UI when models.js cannot be used in local-file mode.
-    if(location.protocol==="file:"){
-      toast("Open this project through a web server so models.js can be imported.");
-    }
+  renderModels();
+  prompt.focus();
   </script>
 </body>
 
