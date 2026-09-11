@@ -767,6 +767,14 @@
     </main>
   </div>
 
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
   <script type="module">
     /*
     Forge is intentionally connected to models.js rather than duplicating a model list here.
@@ -777,8 +785,8 @@
 
     Adding a model to models.js automatically adds it to the model picker.
   */
-  import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-  import { OBJLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/OBJLoader.js';
+  import * as THREE from 'three';
+  import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
   import { models } from "./models.js";
 
   // =============================================================
