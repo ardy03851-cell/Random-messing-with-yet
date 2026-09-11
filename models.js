@@ -39,20 +39,20 @@ export const models = [
   },
 
   {
-    id: "openai/gpt-5-image",
-    name: "gpt-5-image",
-    provider: "OpenAI",
+    id: "qwen/qwen2.5-vl-72b-instruct",
+    name: "qwen2.5-vl-72b-instruct",
+    provider: "Alibaba",
     description:
-      "Multimodal OpenAI model capable of advanced reasoning and coding.",
+      "Multimodal qwen model capable of advanced reasoning and coding.",
 
-    apiKey: "sk-pQaB6YJBaSgpEKHOcWZSFQ",
+    apiKey: "sk-T9iFBiaBeF4qdLPrkKy1Tw",
     endpoint: "https://api.anyapi.ai/v1/chat/completions",
 
     badge: "Active Key",
 
     // Official OpenAI website favicon/logo asset.
     logoUrl:
-      "https://favicon.run/favicon?domain=www.chatgpt.com&sz=32"
+      "https://favicon.run/favicon?domain=www.qwen.com&sz=32"
   }, 
 
   {
