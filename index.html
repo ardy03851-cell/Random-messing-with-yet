@@ -862,7 +862,8 @@
       scene.add(object);
     };
 
-    const handleError = () => {
+    const handleError = (err) => {
+      console.error(`Failed to load 3D model from "${modelPath}":`, err);
       const geometry = new THREE.BoxGeometry(1, 1, 1);
       const material = new THREE.MeshStandardMaterial({ color: 0x6f82ff });
       loadedMesh = new THREE.Mesh(geometry, material);
