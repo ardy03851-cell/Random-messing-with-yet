@@ -783,15 +783,42 @@
   let latestCode = "";
 
   function logoElement(model, size = 20){
-    const holder = document.createElement("span");
-    holder.className = "model-logo";
-    holder.style.width = size + "px";
-    holder.style.height = size + "px";
-    holder.innerHTML = model?.logoSvg || `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/></svg>`;
-    const svg = holder.querySelector("svg");
-    if(svg){ svg.setAttribute("width", size); svg.setAttribute("height", size); }
-    return holder;
-  }
+    const holder = document.createElement("span");
+    holder.className = "model-logo";
+    holder.style.width = size + "px";
+    holder.style.height = size + "px";
+
+
+
+
+    if (model?.logoUrl) {
+      const img = document.createElement("img");
+      img.src = model.logoUrl;
+      img.alt = model.name || "Model logo";
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.objectFit = "contain";
+      img.onerror = () => {
+        if (model.fallbackUrl && img.src !== model.fallbackUrl) {
+          img.src = model.fallbackUrl;
+        } else {
+          holder.innerHTML = model?.logoSvg || `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/></svg>`;
+          const svg = holder.querySelector("svg");
+          if(svg){ svg.setAttribute("width", size); svg.setAttribute("height", size); }
+        }
+      };
+      holder.appendChild(img);
+    } else {
+      holder.innerHTML = model?.logoSvg || `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/></svg>`;
+      const svg = holder.querySelector("svg");
+      if(svg){ svg.setAttribute("width", size); svg.setAttribute("height", size); }
+    }
+
+
+
+
+    return holder;
+  }
 
   function renderModels(){
     modelMenu.innerHTML = "";
