@@ -69,6 +69,6 @@ export const models = [
 
     // Official Anthropic website favicon/logo asset.
     logoUrl:
-      "https://commons.wikimedia.org/wiki/File:Claude_AI_symbol.svg"
+      "https://raw.githubusercontent.com/lobehub/lobe-icons/main/packages/icons-static/svg/claude-color.svg"
   }
 ];
