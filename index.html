@@ -512,8 +512,6 @@
       left: 16px;
       bottom: 78px;
       width: min(340px, calc(100% - 32px));
-      max-height: 420px;
-      overflow-y: auto;
       padding: 8px;
       border-radius: 18px;
       background: rgba(12, 15, 26, .96);
@@ -521,35 +519,7 @@
       box-shadow: 0 25px 80px rgba(0, 0, 0, .65);
       backdrop-filter: blur(25px);
       display: none;
-      z-index: 30;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, .2) transparent;
-    }
-
-    .model-group-header {
-      padding: 8px 11px 4px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: #6c789d;
-      border-top: 1px solid rgba(255, 255, 255, .06);
-      margin-top: 6px;
-    }
-
-    .model-group-header:first-child {
-      border-top: 0;
-      margin-top: 0;
-      padding-top: 4px;
-    }
-
-    .generated-img {
-      max-width: 100%;
-      border-radius: 14px;
-      margin-top: 10px;
-      border: 1px solid rgba(255, 255, 255, .12);
-      display: block;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, .4);
+      z-index: 30
     }
 
     .model-menu.open {
@@ -974,81 +944,34 @@
     return holder;
   }
 
-  function getModelCompany(model){
-    if(model?.company) return model.company;
-    const provider = String(model?.provider || "").toLowerCase();
-    const id = String(model?.id || "").toLowerCase();
-    const name = String(model?.name || "").toLowerCase();
-
-    if(provider.includes("openai") || id.includes("gpt") || id.includes("dall-e") || id.includes("o1") || id.includes("o3") || name.includes("gpt")) return "OpenAI";
-    if(provider.includes("anthropic") || id.includes("claude") || name.includes("claude")) return "Anthropic";
-    if(provider.includes("google") || id.includes("gemini") || id.includes("imagen") || name.includes("gemini")) return "Google";
-    if(provider.includes("deepseek") || id.includes("deepseek") || name.includes("deepseek")) return "DeepSeek";
-    if(provider.includes("moonshot") || id.includes("kimi") || id.includes("moonshot") || name.includes("kimi")) return "Moonshot AI";
-    if(provider.includes("stability") || id.includes("sd") || id.includes("stable-diffusion")) return "Stability AI";
-    if(provider.includes("black forest") || id.includes("flux")) return "Black Forest Labs";
-    
-    if(model?.provider) return model.provider;
-    return "Other Models";
-  }
-
-  function isImageModel(model){
-    if(!model) return false;
-    if(model.type === "image" || model.isImage || model.category === "image") return true;
-    const id = String(model.id || "").toLowerCase();
-    const endpoint = String(model.endpoint || "").toLowerCase();
-    return id.includes("dall-e") || id.includes("flux") || id.includes("imagen") || id.includes("stable-diffusion") || id.includes("sdxl") || id.includes("recraft") || endpoint.includes("/images/");
-  }
-
   function renderModels(){
     modelMenu.innerHTML = "";
     if(!models.length){
       selectedModel.textContent = "No models";
       return;
     }
-
-    const groups = {};
-    models.forEach((model) => {
-      const company = getModelCompany(model);
-      if(!groups[company]) groups[company] = [];
-      groups[company].push(model);
-    });
-
-    let firstModel = null;
-    Object.keys(groups).forEach((company) => {
-      const header = document.createElement("div");
-      header.className = "model-group-header";
-      header.textContent = company;
-      modelMenu.appendChild(header);
-
-      groups[company].forEach((model) => {
-        if(!firstModel) firstModel = model;
-        const item = document.createElement("div");
-        item.className = "model-item";
-        item.appendChild(logoElement(model));
-        const info = document.createElement("div");
-        info.style.minWidth = "0";
-        info.innerHTML = `<strong>${escapeHtml(model.name)}</strong><small>${escapeHtml(model.provider || company)}</small>`;
-        item.appendChild(info);
-        
-        const badgeText = model.badge || (isImageModel(model) ? "Image" : "");
-        if(badgeText){
-          const badge = document.createElement("span");
-          badge.className = "badge";
-          badge.textContent = badgeText;
-          item.appendChild(badge);
-        }
-
-        item.addEventListener("click", () => {
-          activeModel = model;
-          updateSelectedModel();
-          modelMenu.classList.remove("open");
-        });
-        modelMenu.appendChild(item);
+    models.forEach((model, index) => {
+      const item = document.createElement("div");
+      item.className = "model-item";
+      item.appendChild(logoElement(model));
+      const info = document.createElement("div");
+      info.style.minWidth = "0";
+      info.innerHTML = `<strong>${escapeHtml(model.name)}</strong><small>${escapeHtml(model.provider || "AI")}</small>`;
+      item.appendChild(info);
+      if(model.badge){
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = model.badge;
+        item.appendChild(badge);
+      }
+      item.addEventListener("click", () => {
+        activeModel = model;
+        updateSelectedModel();
+        modelMenu.classList.remove("open");
       });
+      modelMenu.appendChild(item);
+      if(index === 0) activeModel = activeModel || model;
     });
-
-    if(!activeModel && firstModel) activeModel = firstModel;
     updateSelectedModel();
   }
 
@@ -1110,12 +1033,9 @@
   }
 
   function formatText(text){
-    let cleaned = escapeHtml(text).replace(/```[\s\S]*?```/g, "");
-    cleaned = cleaned.replace(/!\[(.*?)\]\((https?:\/\/[\s\S]+?|data:image\/[\s\S]+?)\)/g, (match, alt, url) => {
-      const cleanUrl = url.replace(/&amp;/g, "&");
-      return `<img src="${cleanUrl}" alt="${alt}" class="generated-img" loading="lazy" />`;
-    });
-    return cleaned.replace(/\n/g, "<br>");
+    return escapeHtml(text)
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/\n/g, "<br>");
   }
 
   function showWorkspace(code, lang = "html"){
@@ -1160,35 +1080,6 @@
 
   async function askModel(userText){
     if(!activeModel) throw new Error("No AI model is available in models.js.");
-
-    if(isImageModel(activeModel)){
-      const isImagesEndpoint = String(activeModel.endpoint).includes("/images/");
-      const endpoint = isImagesEndpoint ? activeModel.endpoint : String(activeModel.endpoint).replace(/\/chat\/completions$/, "/images/generations");
-
-      const body = {
-        model: activeModel.id,
-        prompt: userText,
-        n: 1,
-        size: activeModel.imageSize || "1024x1024"
-      };
-
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + activeModel.apiKey
-        },
-        body: JSON.stringify(body)
-      });
-
-      if(!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      const imgUrl = data?.data?.[0]?.url || (data?.data?.[0]?.b64_json ? `data:image/png;base64,${data.data[0].b64_json}` : null);
-      if(imgUrl){
-        return `Here is your generated image:\n\n![${userText}](${imgUrl})`;
-      }
-      return "The model completed the request but no image URL was returned.";
-    }
 
     const provider = String(activeModel.provider || "").toLowerCase();
     const isAnthropic = provider.includes("anthropic") || String(activeModel.endpoint).includes("anthropic.com");
