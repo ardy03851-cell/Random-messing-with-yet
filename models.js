@@ -87,4 +87,6 @@ export const models = [
     // Official Anthropic website favicon/logo asset.
     logoUrl:
       "https://chatgpt.com/favicon.ico"   
+   },
+ 
 ];
