@@ -39,13 +39,13 @@ export const models = [
   },
 
   {
-    id: "openai/gpt-4o",
-    name: "GPT-4o",
+    id: "openai/gpt-5-image",
+    name: "GPT-5image",
     provider: "OpenAI",
     description:
       "Multimodal OpenAI model capable of advanced reasoning and coding.",
 
-    apiKey: "sk-_MXtOzhPjFe03YvrR3T-_w",
+    apiKey: "sk-pQaB6YJBaSgpEKHOcWZSFQ",
     endpoint: "https://api.anyapi.ai/v1/chat/completions",
 
     badge: "Active Key",
@@ -53,7 +53,7 @@ export const models = [
     // Official OpenAI website favicon/logo asset.
     logoUrl:
       "https://favicon.run/favicon?domain=www.chatgpt.com&sz=32"
-  },
+  }, 
 
   {
     id: "anthropic/claude-sonnet-5",
@@ -70,22 +70,5 @@ export const models = [
     // Official Anthropic website favicon/logo asset.
     logoUrl:
       "https://claude.com/favicon.ico"
-  },
- 
-  {
-    id: "openai/gpt-5-image",
-    name: "GPT-5image",
-    provider: "OpenAI",
-    description:
-      "Multimodal OpenAI model capable of advanced reasoning and coding.",
-
-    apiKey: "sk-pQaB6YJBaSgpEKHOcWZSFQ",
-    endpoint: "https://api.anyapi.ai/v1/chat/completions",
-
-    badge: "Active Key",
-
-    // Official OpenAI website favicon/logo asset.
-    logoUrl:
-      "https://favicon.run/favicon?domain=www.chatgpt.com&sz=32"
-  }, 
+  }
 ];
