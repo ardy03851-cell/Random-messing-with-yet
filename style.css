@@ -1,10 +1,10 @@
 :root {
   --bg-main: #0B0E14;
-  --bg-surface: #131822;
-  --bg-card: #1C2333;
-  --border-color: #2A3447;
-  --accent-mint: #00E599;
-  --accent-mint-dim: rgba(0, 229, 153, 0.15);
+  --bg-surface: #000000;
+  --bg-card: #ffda5d;
+  --border-color: #ffea80;
+  --accent-mint: #feff43;
+  --accent-mint-dim: #ff9e4a;
   --text-primary: #F0F4F8;
   --text-muted: #8A99AD;
   --font-mono: 'Fira Code', 'Consolas', 'Courier New', monospace;
