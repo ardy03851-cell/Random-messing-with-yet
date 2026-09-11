@@ -39,8 +39,8 @@ export const models = [
     name: "GPT-4o",
     provider: "OpenAI",
     description: "Versatile, high-speed multimodal intelligence for full-stack engineering.",
-    apiKey: "sk-wj92IoUrzPk_2zD9av5nWA",
-    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    apiKey: "sk-_MXtOzhPjFe03YvrR3T-_w",
+    endpoint: "https://api.anyapi.ai/v1/chat/completions",
     badge: "Fast",
     // OpenAI Logo: The official hexagonal swirl pattern
     logoSvg: `
